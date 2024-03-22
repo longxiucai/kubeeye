@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/kubesphere/kubeeye/cmd/ke/ctl"
 	"k8s.io/klog/v2"
-	"os"
 )
 
 func main() {
