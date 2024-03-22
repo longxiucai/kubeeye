@@ -2,13 +2,14 @@ package output
 
 import (
 	"encoding/json"
-	"github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
-	"github.com/kubesphere/kubeeye/pkg/constant"
-	"github.com/kubesphere/kubeeye/pkg/utils"
 	"io"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
+	"github.com/kubesphere/kubeeye/pkg/constant"
+	"github.com/kubesphere/kubeeye/pkg/utils"
 )
 
 type renderNode struct {
@@ -181,15 +182,17 @@ func getServiceConnect(component []v1alpha2.ServiceConnectResultItem) []renderNo
 	header := renderNode{Header: true, Children: []renderNode{
 		{Text: "name"},
 		{Text: "namespace"},
-		{Text: "endpoint"}},
+		{Text: "endpoint"},
+		{Text: "assert"},
+		{Text: "level"}},
 	}
 	villeinage = append(villeinage, header)
 
 	for _, c := range component {
-		if c.Assert {
-			value := []renderNode{{Text: c.Name}, {Text: c.Namespace}, {Text: c.Endpoint}}
-			villeinage = append(villeinage, renderNode{Children: value})
-		}
+		// if c.Assert {
+		value := []renderNode{{Text: c.Name}, {Text: c.Namespace}, {Text: c.Endpoint}, {Text: utils.BoolToString(c.Assert)}, {Text: string(c.Level)}}
+		villeinage = append(villeinage, renderNode{Children: value})
+		// }
 	}
 
 	return villeinage
@@ -202,20 +205,23 @@ func getSysctl(sysctlResult []v1alpha2.NodeMetricsResultItem) []renderNode {
 			{Text: "name"},
 			{Text: "nodeName"},
 			{Text: "value"},
-		}}
+			{Text: "assert"},
+			{Text: "level"}}}
 	villeinage = append(villeinage, header)
 
 	for _, item := range sysctlResult {
-		if item.Assert {
-			val := renderNode{
-				Issues: item.Assert,
-				Children: []renderNode{
-					{Text: item.Name},
-					{Text: item.NodeName},
-					{Text: *item.Value},
-				}}
-			villeinage = append(villeinage, val)
-		}
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: item.NodeName},
+				{Text: *item.Value},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
 
 	}
 
@@ -231,22 +237,26 @@ func getNodeInfo(nodeInfo []v1alpha2.NodeInfoResultItem) []renderNode {
 			{Text: "resourcesType"},
 			{Text: "mount"},
 			{Text: "value"},
+			{Text: "assert"},
+			{Text: "level"},
 		}}
 	villeinage = append(villeinage, header)
 
 	for _, item := range nodeInfo {
-		if item.Assert {
-			val := renderNode{
-				Issues: item.Assert,
-				Children: []renderNode{
-					{Text: item.Name},
-					{Text: item.NodeName},
-					{Text: item.ResourcesType.Type},
-					{Text: item.ResourcesType.Mount},
-					{Text: item.Value},
-				}}
-			villeinage = append(villeinage, val)
-		}
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: item.NodeName},
+				{Text: item.ResourcesType.Type},
+				{Text: item.ResourcesType.Mount},
+				{Text: item.Value},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
 
 	}
 
@@ -260,21 +270,25 @@ func getSystemd(systemdResult []v1alpha2.NodeMetricsResultItem) []renderNode {
 			{Text: "name"},
 			{Text: "nodeName"},
 			{Text: "value"},
+			{Text: "assert"},
+			{Text: "level"},
 		},
 	}
 	villeinage = append(villeinage, header)
 
 	for _, item := range systemdResult {
-		if item.Assert {
-			val := renderNode{
-				Issues: item.Assert,
-				Children: []renderNode{
-					{Text: item.Name},
-					{Text: item.NodeName},
-					{Text: *item.Value},
-				}}
-			villeinage = append(villeinage, val)
-		}
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: item.NodeName},
+				{Text: *item.Value},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
 	}
 
 	return villeinage
@@ -286,21 +300,25 @@ func getCommand(commandResult []v1alpha2.CommandResultItem) []renderNode {
 			{Text: "name"},
 			{Text: "nodeName"},
 			{Text: "value"},
+			{Text: "assert"},
+			{Text: "level"},
 		},
 	}
 	villeinage = append(villeinage, header)
 
 	for _, item := range commandResult {
-		if item.Assert {
-			val := renderNode{
-				Issues: item.Assert,
-				Children: []renderNode{
-					{Text: item.Name},
-					{Text: item.NodeName},
-					{Text: utils.BoolToString(item.Assert)},
-				}}
-			villeinage = append(villeinage, val)
-		}
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: item.NodeName},
+				{Text: item.Value},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
 	}
 
 	return villeinage

@@ -3,6 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	versionsv1alpha2 "github.com/kubesphere/kubeeye/clients/informers/externalversions/kubeeye/v1alpha2"
@@ -14,10 +19,6 @@ import (
 	"github.com/kubesphere/kubeeye/pkg/utils"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
-	"net/http"
-	"os"
-	"path"
-	"strings"
 )
 
 type InspectResult struct {
@@ -75,6 +76,22 @@ func (i *InspectResult) ListInspectResult(gin *gin.Context) {
 
 		}
 		gin.JSON(http.StatusOK, resultCustomized)
+		return
+	} else if outType == "html" {
+		var htmlContent strings.Builder
+		htmlContent.WriteString("<html><body><ul>")
+		for _, result := range results {
+			htmlContent.WriteString("<li>")
+			reqURL := gin.Request.URL.Path + "/" + result.Name + "?type=html"
+			htmlContent.WriteString("<a href=\"")
+			htmlContent.WriteString(reqURL)
+			htmlContent.WriteString("\">")
+			htmlContent.WriteString(result.Name)
+			htmlContent.WriteString("</a>")
+			htmlContent.WriteString("</li>")
+		}
+		htmlContent.WriteString("</ul></body></html>")
+		gin.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlContent.String()))
 		return
 	}
 
