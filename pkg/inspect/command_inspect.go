@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
+	"syscall"
+
 	"github.com/kubesphere/event-rule-engine/visitor"
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
@@ -13,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"os/exec"
 )
 
 type commandInspect struct {
@@ -38,6 +41,17 @@ func (c *commandInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha2
 			klog.Error(err, " Failed to marshal kubeeye result")
 			return nil, err
 		}
+
+		klog.Infof(`Calling chroot("%s")`, constant.RootPathPrefix)
+		if err := syscall.Chroot(constant.RootPathPrefix); err != nil {
+			klog.Fatalf("Unable to chroot to %s: %s", constant.RootPathPrefix, err)
+		}
+
+		klog.Infof("Moving to / inside the chroot")
+		if err := os.Chdir("/"); err != nil {
+			klog.Fatalf("Unable to change directory to /: %s", err)
+		}
+
 		for _, r := range commandRules {
 			ctl := kubeeyev1alpha2.CommandResultItem{
 				BaseResult: kubeeyev1alpha2.BaseResult{Name: r.Name},
@@ -59,10 +73,11 @@ func (c *commandInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha2
 				ctl.Level = r.Level
 				ctl.Assert = true
 			} else {
+				ctl.Value = string(outputResult)
 				if res {
 					ctl.Level = r.Level
 				}
-				ctl.Assert = res
+				ctl.Assert = !res
 			}
 
 			commandResult = append(commandResult, ctl)
