@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
+
 	"github.com/kubesphere/event-rule-engine/visitor"
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
@@ -15,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"path"
 
 	"strings"
 )
@@ -105,9 +106,9 @@ func (n *nodeInfoInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha
 					resultItem.Assert = true
 				}
 			}
-			if ok || resultItem.Assert {
-				resultItem.Level = info.Level
-				resultItem.Assert = true
+			resultItem.Level = info.Level
+			if err == nil {
+				resultItem.Assert = !ok
 			}
 			nodeInfoResult = append(nodeInfoResult, resultItem)
 		}
