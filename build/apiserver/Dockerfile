@@ -17,20 +17,20 @@ COPY ../../pkg/controllers controllers/
 COPY ../../pkg pkg/
 COPY ../../pkg/constant constant/
 COPY ../../swaggerDocs swaggerDocs/
-
+COPY ../../vendor vendor/
 
 
 COPY ../../go.mod go.mod
 COPY ../../go.sum go.sum
 
-RUN go mod tidy && go mod vendor
+# RUN go mod tidy && go mod vendor
 
 # Do not force rebuild of up-to-date packages (do not use -a) and use the compiler cache folder
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETPLATFORM} go build   -o /workspace/apiserver ./cmd/apiserver
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETPLATFORM} go build  --mod vendor -o /workspace/apiserver ./cmd/apiserver
 
 
-FROM --platform=${TARGETPLATFORM} alpine:3.18
+FROM --platform=${TARGETPLATFORM}  harbor.kylincloudnative.com/docker.io/library/alpine:latest
 
 WORKDIR /
 
