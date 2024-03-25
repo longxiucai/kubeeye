@@ -21,6 +21,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"time"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	kubeeyeInformers "github.com/kubesphere/kubeeye/clients/informers/externalversions/kubeeye"
 	"github.com/kubesphere/kubeeye/pkg/conf"
@@ -33,9 +37,6 @@ import (
 	kubeErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"os"
-	"path"
-	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -188,6 +189,8 @@ func (r *InspectResultReconciler) CountLevelNum(resultName string) (map[kubeeyev
 	totalResultLevel(result.Spec.ComponentResult, levelTotal)
 
 	totalResultLevel(result.Spec.CommandResult, levelTotal)
+
+	totalResultLevel(result.Spec.OutOfClusterResult, levelTotal)
 
 	return levelTotal, nil
 }

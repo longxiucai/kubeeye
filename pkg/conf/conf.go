@@ -1,8 +1,9 @@
 package conf
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	"time"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -105,4 +106,38 @@ type MessageEvent struct {
 
 type EventHandler interface {
 	HandleMessageEvent(event *MessageEvent)
+}
+
+type SSH struct {
+	Encrypted bool   `mapstructure:"encrypted" yaml:"encrypted,omitempty" json:"encrypted,omitempty"`
+	User      string `mapstructure:"user" yaml:"user,omitempty" json:"user,omitempty"`
+	Passwd    string `mapstructure:"passwd" yaml:"passwd,omitempty" json:"passwd,omitempty"`
+	Pk        string `mapstructure:"pk" yaml:"pk,omitempty" json:"pk,omitempty"`
+	PkPasswd  string `mapstructure:"pkPasswd" yaml:"pkPasswd,omitempty" json:"pkPasswd,omitempty"`
+	Port      string `mapstructure:"port" yaml:"port,omitempty" json:"port,omitempty"`
+}
+
+type Host struct {
+	IPS   []string `mapstructure:"ips" yaml:"ips,omitempty" json:"ips,omitempty"`
+	Roles []string `mapstructure:"roles" yaml:"roles,omitempty" json:"roles,omitempty"`
+	SSH   `mapstructure:"ssh" yaml:"ssh,omitempty" json:"ssh,omitempty"`
+	Env   []string `mapstructure:"env" yaml:"env,omitempty" json:"env,omitempty"`
+}
+
+type ClusterSpec struct {
+	Hosts []Host `mapstructure:"hosts" yaml:"hosts" json:"hosts"`
+	SSH   `mapstructure:"ssh" yaml:"ssh,omitempty" json:"ssh,omitempty"`
+}
+
+func (in *ClusterSpec) GetIPSByRole(role string) []string {
+	var hosts []string
+	for _, host := range in.Hosts {
+		for _, hostRole := range host.Roles {
+			if role == hostRole {
+				hosts = append(hosts, host.IPS...)
+				continue
+			}
+		}
+	}
+	return hosts
 }

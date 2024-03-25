@@ -18,8 +18,9 @@ package v1alpha2
 
 import (
 	"encoding/json"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -42,6 +43,7 @@ type InspectResultSpec struct {
 	CommandResult        []CommandResultItem        `json:"commandResult,omitempty"`
 	ComponentResult      []ComponentResultItem      `json:"componentResult,omitempty"`
 	ServiceConnectResult []ServiceConnectResultItem `json:"serviceConnectResult,omitempty"`
+	OutOfClusterResult   []OutOfClusterResultItem   `json:"outOfClusterResult,omitempty"`
 }
 
 // InspectResultStatus defines the observed state of InspectResult
@@ -113,6 +115,14 @@ type CommandResultItem struct {
 	Command    string `json:"command,omitempty"`
 	Value      string `json:"value,omitempty"`
 	NodeName   string `json:"nodeName,omitempty"`
+}
+
+type OutOfClusterResultItem struct {
+	BaseResult `json:",inline"`
+	Command    string `json:"command,omitempty"`
+	Value      string `json:"value,omitempty"`
+	NodeName   string `json:"nodeName,omitempty"`
+	NodeIP     string `json:"nodeIP,omitempty"`
 }
 
 // +genclient

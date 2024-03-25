@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/inspect"
@@ -143,7 +144,9 @@ type ExecuteRule struct {
 }
 
 func NewExecuteRuleOptions(clients *kube.KubernetesClient, Task *kubeeyev1alpha2.InspectTask) *ExecuteRule {
-	clusterInspectRuleNames := []string{constant.Opa, constant.Prometheus, constant.ServiceConnect}
+	// clusterInspectRuleNames := []string{constant.Opa, constant.Prometheus, constant.ServiceConnect, constant.OutOfCluster} //只跑创建一个job在一个节点运行一次
+	clusterInspectRuleNames := constant.ClusterInspectRuleNames
+
 	clusterInspectRuleMap := map[string]string{
 		"opas":           constant.Opa,
 		"prometheus":     constant.Prometheus,
@@ -154,6 +157,7 @@ func NewExecuteRuleOptions(clients *kube.KubernetesClient, Task *kubeeyev1alpha2
 		"fileFilter":     constant.FileFilter,
 		"customCommand":  constant.CustomCommand,
 		"nodeInfo":       constant.NodeInfo,
+		"outOfCluster":   constant.OutOfCluster,
 	}
 	return &ExecuteRule{
 		KubeClient:              clients,

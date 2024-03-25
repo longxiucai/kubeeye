@@ -68,7 +68,10 @@ func HtmlOut(resultName string) (error, map[string]interface{}) {
 
 	if results.Spec.CommandResult != nil {
 		resultCollection[constant.CustomCommand] = getCommand(results.Spec.CommandResult)
-
+	}
+	// outOfCommandResult
+	if results.Spec.OutOfClusterResult != nil {
+		resultCollection[constant.OutOfCluster] = getOutOfCluster(results.Spec.OutOfClusterResult)
 	}
 	if results.Spec.NodeInfo != nil {
 		resultCollection[constant.NodeInfo] = getNodeInfo(results.Spec.NodeInfo)
@@ -284,6 +287,36 @@ func getSystemd(systemdResult []v1alpha2.NodeMetricsResultItem) []renderNode {
 				{Text: item.Name},
 				{Text: item.NodeName},
 				{Text: *item.Value},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
+	}
+
+	return villeinage
+}
+func getOutOfCluster(outOfCluster []v1alpha2.OutOfClusterResultItem) []renderNode {
+	var villeinage []renderNode
+	header := renderNode{Header: true,
+		Children: []renderNode{
+			{Text: "name"},
+			{Text: "nodeIP"},
+			{Text: "value"},
+			{Text: "assert"},
+			{Text: "level"},
+		},
+	}
+	villeinage = append(villeinage, header)
+
+	for _, item := range outOfCluster {
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: item.NodeIP},
+				{Text: item.Value},
 				{Text: utils.BoolToString(item.Assert)},
 				{Text: string(item.Level)},
 			}}

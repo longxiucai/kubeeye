@@ -11,6 +11,9 @@ const DefaultTimeout = 10 * time.Minute
 const (
 	DefaultNamespace = "kubeeye-system"
 )
+const (
+	DefaultOutOfClusterSSHConfigMap = "out-of-cluster-ssh-config"
+)
 
 var SystemNamespaces = []string{"kubesphere-system", "kubesphere-logging-system", "kubesphere-monitoring-system", "openpitrix-system", "kube-system", "istio-system", "kubesphere-devops-system", "porter-system"}
 
@@ -28,7 +31,10 @@ const (
 	Component      = "component"
 	CustomCommand  = "customcommand"
 	NodeInfo       = "nodeinfo"
+	OutOfCluster   = "outofcluster"
 )
+
+var ClusterInspectRuleNames = []string{Opa, Prometheus, ServiceConnect, OutOfCluster}
 
 const (
 	Cpu        = "cpu"

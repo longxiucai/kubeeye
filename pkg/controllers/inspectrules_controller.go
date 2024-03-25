@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"time"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/utils"
 	kubeErr "k8s.io/apimachinery/pkg/api/errors"
@@ -26,7 +28,6 @@ import (
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 // InspectRulesReconciler reconciles a Insights object
@@ -120,6 +121,9 @@ func (r *InspectRulesReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 	if inspectRules.Spec.CustomCommand != nil {
 		ComputeLevel(inspectRules.Spec.CustomCommand, levelCount)
+	}
+	if inspectRules.Spec.OutOfCluster != nil {
+		ComputeLevel(inspectRules.Spec.OutOfCluster, levelCount)
 	}
 	if inspectRules.Spec.NodeInfo != nil {
 		ComputeLevel(inspectRules.Spec.NodeInfo, levelCount)

@@ -15,19 +15,19 @@ COPY ../../pkg pkg/
 COPY ../../pkg/constant constant/
 COPY ../../plugins plugins/
 COPY ../../swaggerDocs swaggerDocs/
-
+COPY ../../vendor vendor/
 # Copy the Go Modules manifests
 COPY ../../go.mod go.mod
 COPY ../../go.sum go.sum
 
-RUN go mod tidy && go mod vendor
+# RUN go mod tidy && go mod vendor
 
 ENV CGO_ENABLED=0
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETPLATFORM} go build   -o /workspace/controller ./cmd/ke-manager/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETPLATFORM} go build  --mod vendor  -o /workspace/controller ./cmd/ke-manager/main.go
 
-FROM alpine:3.18 as ke-manager
+FROM harbor.kylincloudnative.com/docker.io/library/alpine:latest as ke-manager
 
 WORKDIR /kubeeye
 

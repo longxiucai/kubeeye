@@ -38,6 +38,7 @@ type InspectRuleSpec struct {
 	CustomCommand      []CustomCommandRule      `json:"customCommand,omitempty"`
 	NodeInfo           []NodeInfo               `json:"nodeInfo,omitempty"`
 	ServiceConnect     []ServiceConnectRuleItem `json:"serviceConnect,omitempty"`
+	OutOfCluster       []OutOfClusterRule       `json:"outOfCluster,omitempty"`
 }
 type RuleItemBases struct {
 	Name  string `json:"name,omitempty"`
@@ -89,6 +90,14 @@ type FileChangeRule struct {
 	Path          string `json:"path,omitempty"`
 	Node          `json:",inline"`
 }
+
+type OutOfClusterRule struct {
+	RuleItemBases `json:",inline"`
+	Command       string   `json:"command,omitempty"`
+	NodeSelects   []string `json:"nodeSelects,omitempty"`
+	Hosts         []string `json:"hosts,omitempty"`
+}
+
 type CustomCommandRule struct {
 	RuleItemBases `json:",inline"`
 	Command       string `json:"command,omitempty"`
