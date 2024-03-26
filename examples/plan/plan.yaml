@@ -19,7 +19,7 @@ spec:
     - name: inspect-rule-node-info
     - name: inspect-rule-node
     - name: inspect-rule-sbnormalpodstatus 
-    - name: inspect-rule-deployment
+    - name: inspect-rule-opa-deployment-job-pod
     - name: inspect-rule-sysctl
     - name: inspect-rule-prometheus
     - name: inspect-rule-filechange

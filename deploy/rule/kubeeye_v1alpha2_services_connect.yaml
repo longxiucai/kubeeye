@@ -4,6 +4,6 @@ metadata:
   name: services-connect
 spec:
   serviceConnect:
-    - workspace: system-workspace
+    - namespace: kube-system
       level: warning
-
+    - name: kubeeye-apiserver
