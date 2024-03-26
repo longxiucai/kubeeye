@@ -15,7 +15,10 @@ const (
 	DefaultOutOfClusterSSHConfigMap = "out-of-cluster-ssh-config"
 )
 
-var SystemNamespaces = []string{"kubesphere-system", "kubesphere-logging-system", "kubesphere-monitoring-system", "openpitrix-system", "kube-system", "istio-system", "kubesphere-devops-system", "porter-system"}
+var SystemNamespaces = []string{"kylin-system", "monitoring", "kcm", "ha", "kube-system",
+	"kubesphere-logging-system", "kubesphere-monitoring-system",
+	"openpitrix-system", "istio-system",
+	"kubesphere-devops-system", "porter-system"}
 
 const BaseFilePrefix = "kubeeye-base-file"
 const (

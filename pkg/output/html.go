@@ -135,7 +135,9 @@ func HtmlOut(resultName string) (error, map[string]interface{}) {
 	if results.Spec.FileChangeResult != nil {
 		resultCollection[constant.FileChange] = getFileChange(results.Spec.FileChangeResult)
 	}
-
+	if results.Spec.ComponentResult != nil {
+		resultCollection[constant.Component] = getComponent(results.Spec.ComponentResult)
+	}
 	if results.Spec.SysctlResult != nil {
 		resultCollection[constant.Sysctl] = getSysctl(results.Spec.SysctlResult)
 
@@ -263,6 +265,7 @@ func getFileFilter(fileResult []v1alpha2.FileChangeResultItem) []renderNode {
 
 	return villeinage
 }
+
 func getServiceConnect(component []v1alpha2.ServiceConnectResultItem) []renderNode {
 	var villeinage []renderNode
 	header := renderNode{Header: true, Children: []renderNode{
@@ -281,6 +284,30 @@ func getServiceConnect(component []v1alpha2.ServiceConnectResultItem) []renderNo
 		// }
 	}
 
+	return villeinage
+}
+
+func getComponent(sysctlResult []v1alpha2.ComponentResultItem) []renderNode {
+	var villeinage []renderNode
+	header := renderNode{Header: true,
+		Children: []renderNode{
+			{Text: "serviceName"},
+			{Text: "assert"},
+			{Text: "level"}}}
+	villeinage = append(villeinage, header)
+
+	for _, item := range sysctlResult {
+		// if item.Assert {
+		val := renderNode{
+			Issues: item.Assert,
+			Children: []renderNode{
+				{Text: item.Name},
+				{Text: utils.BoolToString(item.Assert)},
+				{Text: string(item.Level)},
+			}}
+		villeinage = append(villeinage, val)
+		// }
+	}
 	return villeinage
 }
 

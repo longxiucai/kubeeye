@@ -14,6 +14,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// 对重要namespace（constant.SystemNamespaces）的service进行巡检，强制的
 type componentInspect struct {
 }
 

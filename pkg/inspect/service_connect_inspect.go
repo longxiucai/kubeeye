@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"time"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/kube"
@@ -13,8 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"net"
-	"time"
 )
 
 type serviceConnectInspect struct {
@@ -158,7 +159,7 @@ func GetServicesForNameSpace(services []corev1.Service, namespace string) []core
 
 func GetServices(services []corev1.Service, name string) (corev1.Service, bool) {
 	_, ok, service := utils.ArrayFinds(services, func(v corev1.Service) bool {
-		return name == v.Namespace && v.Spec.Type != corev1.ServiceTypeExternalName && v.Spec.ClusterIP != "None"
+		return name == v.Name && v.Spec.Type != corev1.ServiceTypeExternalName && v.Spec.ClusterIP != "None"
 	})
 	return service, ok
 }
