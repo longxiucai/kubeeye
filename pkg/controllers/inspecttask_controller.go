@@ -20,6 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"os"
+	"path"
+	"sync"
+	"time"
+
 	kubeeyeInformers "github.com/kubesphere/kubeeye/clients/informers/externalversions/kubeeye"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/rules"
@@ -30,11 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"math"
-	"os"
-	"path"
-	"sync"
-	"time"
 
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/conf"
@@ -365,8 +366,12 @@ func (r *InspectTaskReconciler) createJobsInspect(ctx context.Context, task *kub
 					}
 					mutex.Unlock()
 				} else {
-					klog.Errorf("failed  to deploy job with name %s", v.JobName)
-					jobNames = append(jobNames, kubeeyev1alpha2.JobPhase{JobName: v.JobName, Phase: kubeeyev1alpha2.PhaseFailed})
+					klog.Errorf("failed to deploy job with name %s", v.JobName)
+					_, exist := utils.ArrayFind(v.RuleType, constant.ClusterInspectRuleNames)
+					if !exist {
+						r.generateFailedResult(resultData, v)
+						jobNames = append(jobNames, kubeeyev1alpha2.JobPhase{JobName: v.JobName, Phase: kubeeyev1alpha2.PhaseFailed})
+					}
 				}
 				klog.Infof("Job %s completed", v.JobName)
 			} else {
@@ -420,6 +425,20 @@ func (r *InspectTaskReconciler) waitForJobCompletionGetResult(ctx context.Contex
 		time.Sleep(10 * time.Second)
 	}
 
+}
+
+func (r *InspectTaskReconciler) generateFailedResult(
+	resultData *kubeeyev1alpha2.InspectResult,
+	job kubeeyev1alpha2.JobRule) {
+	klog.Info("generate Failed Result")
+	inspectInterface, status := inspect.RuleOperatorMap[job.RuleType]
+	nodeName, err := GetDeploySchedule(job.RunRule)
+	if nodeName != "" && status {
+		klog.Infof("starting generate %s failed result data", job.JobName)
+		inspectInterface.GetResult(nodeName, nil, resultData)
+		return
+	}
+	klog.Infof("generate failed result data err:%v", err)
 }
 
 func (r *InspectTaskReconciler) getInspectResultData(ctx context.Context, clients *kube.KubernetesClient, resultData *kubeeyev1alpha2.InspectResult, jobName string) error {

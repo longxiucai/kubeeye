@@ -5,6 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"regexp"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/kube"
@@ -13,9 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/klog/v2"
-	"os"
-	"path"
-	"regexp"
 )
 
 type fileFilterInspect struct {
@@ -85,6 +86,19 @@ func (f *fileFilterInspect) RunInspect(ctx context.Context, rules []kubeeyev1alp
 func (f *fileFilterInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 
 	var fileFilterResult []kubeeyev1alpha2.FileChangeResultItem
+	var fileFilterResultItem kubeeyev1alpha2.FileChangeResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		fileFilterResultItem.Issues = []string{"[ERROR]fileFilter_job_failed_PLEASE_CHECK_THE_NODE"}
+		fileFilterResultItem.Level = kubeeyev1alpha2.DangerLevel
+		fileFilterResultItem.Assert = true
+		fileFilterResultItem.Path = "[ERROR]fileChange_job_failed_PLEASE_CHECK_THE_NODE"
+		fileFilterResultItem.Name = "[ERROR]fileFilter_job_failed_PLEASE_CHECK_THE_NODE"
+		fileFilterResultItem.NodeName = runNodeName
+		resultCr.Spec.FileFilterResult = append(resultCr.Spec.FileFilterResult, fileFilterResultItem)
+		return resultCr, nil
+	}
+
 	err := json.Unmarshal(resultCm.BinaryData[constant.Data], &fileFilterResult)
 	if err != nil {
 		klog.Error("failed to get result", err)

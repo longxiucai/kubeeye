@@ -3,6 +3,7 @@ package inspect
 import (
 	"context"
 	"encoding/json"
+
 	kubeeyev1alpha2 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha2"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/kube"
@@ -10,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
+	"k8s.io/klog/v2"
 )
 
 type componentInspect struct {
@@ -58,6 +60,15 @@ func (c *componentInspect) RunInspect(ctx context.Context, rules []kubeeyev1alph
 
 func (c *componentInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 	var componentResult []kubeeyev1alpha2.ComponentResultItem
+	var componentResultItem kubeeyev1alpha2.ComponentResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		componentResultItem.Level = kubeeyev1alpha2.DangerLevel
+		componentResultItem.Assert = true
+		componentResultItem.Name = "[ERROR]component_job_failed_PLEASE_CHECK_THE_NODE"
+		resultCr.Spec.ComponentResult = append(resultCr.Spec.ComponentResult, componentResultItem)
+		return resultCr, nil
+	}
 	err := json.Unmarshal(resultCm.BinaryData[constant.Data], &componentResult)
 	if err != nil {
 		return nil, err

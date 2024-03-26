@@ -125,6 +125,17 @@ func (n *nodeInfoInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha
 func (n *nodeInfoInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 
 	var nodeInfoResult []kubeeyev1alpha2.NodeInfoResultItem
+	var nodeInfoResultItem kubeeyev1alpha2.NodeInfoResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		nodeInfoResultItem.Value = fmt.Sprintf("Job create or running on %v failed!!! please check the node", runNodeName)
+		nodeInfoResultItem.Level = kubeeyev1alpha2.DangerLevel
+		nodeInfoResultItem.Assert = true
+		nodeInfoResultItem.Name = "[ERROR]nodeInfo_job_failed_PLEASE_CHECK_THE_NODE"
+		nodeInfoResultItem.NodeName = runNodeName
+		resultCr.Spec.NodeInfo = append(resultCr.Spec.NodeInfo, nodeInfoResultItem)
+		return resultCr, nil
+	}
 	err := json.Unmarshal(resultCm.BinaryData[constant.Data], &nodeInfoResult)
 	if err != nil {
 		klog.Error("failed to get result", err)

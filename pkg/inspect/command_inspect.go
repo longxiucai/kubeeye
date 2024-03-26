@@ -64,9 +64,9 @@ func (c *commandInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha2
 				ctl.Value = fmt.Sprintf("command execute failed, %s", err)
 				ctl.Level = r.Level
 				ctl.Assert = true
+				commandResult = append(commandResult, ctl)
 				continue
 			}
-
 			err, res := visitor.EventRuleEvaluate(map[string]interface{}{"result": string(outputResult)}, r.Rule)
 			if err != nil {
 				ctl.Value = fmt.Sprintf("rule evaluate failed err:%s", err)
@@ -95,6 +95,19 @@ func (c *commandInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha2
 func (c *commandInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 
 	var commandResult []kubeeyev1alpha2.CommandResultItem
+	var commandResultItem kubeeyev1alpha2.CommandResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		commandResultItem.Value = fmt.Sprintf("Job create or running on %v failed!!! please check the node", runNodeName)
+		commandResultItem.Level = kubeeyev1alpha2.DangerLevel
+		commandResultItem.Assert = true
+		commandResultItem.Name = "[ERROR]command_job_failed_PLEASE_CHECK_THE_NODE"
+		commandResultItem.Command = "[ERROR]unknow"
+		commandResultItem.NodeName = runNodeName
+		resultCr.Spec.CommandResult = append(resultCr.Spec.CommandResult, commandResultItem)
+		return resultCr, nil
+	}
+
 	err := json.Unmarshal(resultCm.BinaryData[constant.Data], &commandResult)
 	if err != nil {
 		klog.Error("failed to get result", err)

@@ -91,6 +91,19 @@ func (o *sysctlInspect) RunInspect(ctx context.Context, rules []kubeeyev1alpha2.
 func (o *sysctlInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 
 	var SysctlResult []kubeeyev1alpha2.NodeMetricsResultItem
+	var SysctlResultItem kubeeyev1alpha2.NodeMetricsResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		evalErr := fmt.Sprintf("Job create or running on %v failed!!! please check the node", runNodeName)
+		SysctlResultItem.Value = &evalErr
+		SysctlResultItem.Level = kubeeyev1alpha2.DangerLevel
+		SysctlResultItem.Assert = true
+		SysctlResultItem.Name = "[ERROR]sysctl_job_failed_PLEASE_CHECK_THE_NODE"
+		SysctlResultItem.NodeName = runNodeName
+		resultCr.Spec.SysctlResult = append(resultCr.Spec.SysctlResult, SysctlResultItem)
+		return resultCr, nil
+	}
+
 	err := json.Unmarshal(resultCm.BinaryData[constant.Data], &SysctlResult)
 	if err != nil {
 		klog.Error("failed to get result", err)

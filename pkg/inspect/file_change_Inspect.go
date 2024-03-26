@@ -105,6 +105,18 @@ func (f *fileChangeInspect) RunInspect(ctx context.Context, rules []kubeeyev1alp
 func (f *fileChangeInspect) GetResult(runNodeName string, resultCm *corev1.ConfigMap, resultCr *kubeeyev1alpha2.InspectResult) (*kubeeyev1alpha2.InspectResult, error) {
 
 	var fileChangeResult []kubeeyev1alpha2.FileChangeResultItem
+	var fileChangeResultItem kubeeyev1alpha2.FileChangeResultItem
+	if resultCm == nil {
+		klog.Infof("starting generate failed result data(job)")
+		fileChangeResultItem.Issues = []string{"[ERROR]fileFilter_job_failed_PLEASE_CHECK_THE_NODE"}
+		fileChangeResultItem.Level = kubeeyev1alpha2.DangerLevel
+		fileChangeResultItem.Assert = true
+		fileChangeResultItem.Path = "[ERROR]fileChange_job_failed_PLEASE_CHECK_THE_NODE"
+		fileChangeResultItem.Name = "[ERROR]fileChange_job_failed_PLEASE_CHECK_THE_NODE"
+		fileChangeResultItem.NodeName = runNodeName
+		resultCr.Spec.FileChangeResult = append(resultCr.Spec.FileChangeResult, fileChangeResultItem)
+		return resultCr, nil
+	}
 	jsonErr := json.Unmarshal(resultCm.BinaryData[constant.Data], &fileChangeResult)
 	if jsonErr != nil {
 		klog.Error("failed to get result", jsonErr)
