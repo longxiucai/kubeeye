@@ -2,6 +2,7 @@ package output
 
 import (
 	"encoding/json"
+	"html/template"
 	"io"
 	"os"
 	"path"
@@ -17,6 +18,88 @@ type renderNode struct {
 	Issues   bool
 	Header   bool
 	Children []renderNode
+}
+
+type HtmlResultItem struct {
+	URL  string
+	Name string
+}
+
+func HtmlOutInspectResult(res []HtmlResultItem) (string, error) {
+	// 定义模板内容
+	htmlTemplate := `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Inspect Results</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f0f0f0;
+				margin: 0;
+				padding: 0;
+			}
+	
+			.container {
+				width: 80%;
+				margin: 20px auto;
+				background-color: #fff;
+				border-radius: 5px;
+				box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+				padding: 20px;
+			}
+	
+			h1 {
+				text-align: center;
+				margin-bottom: 20px;
+			}
+	
+			ul {
+				list-style-type: none;
+				padding: 0;
+			}
+	
+			li {
+				margin-bottom: 10px;
+			}
+	
+			a {
+				text-decoration: none;
+				color: #007bff;
+			}
+	
+			a:hover {
+				text-decoration: underline;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Inspect Results</h1>
+			<ul>
+				{{range .}}
+				<li>
+					<a href="{{.URL}}">{{.Name}}</a>
+				</li>
+				{{end}}
+			</ul>
+		</div>
+	</body>
+	</html>	
+	`
+
+	tmpl := template.Must(template.New("html").Parse(htmlTemplate))
+	// 创建模板
+	var renderedHTML strings.Builder
+
+	// 将数据传递给模板并渲染页面
+	err := tmpl.Execute(&renderedHTML, res)
+	if err != nil {
+		return "", err
+	}
+	return renderedHTML.String(), nil
 }
 
 func HtmlOut(resultName string) (error, map[string]interface{}) {

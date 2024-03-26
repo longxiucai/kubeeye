@@ -1,7 +1,9 @@
 package template
 
-import texttemplate "text/template"
-import hemltemplate "html/template"
+import (
+	hemltemplate "html/template"
+	texttemplate "text/template"
+)
 
 func GetInspectRuleTemplate() (*texttemplate.Template, error) {
 
@@ -129,7 +131,6 @@ func GetInspectResultHtmlTemplate() (*hemltemplate.Template, error) {
 {{end}}
 
 </body>
-
 <style>
     .header {
         display: flex;
@@ -142,13 +143,31 @@ func GetInspectResultHtmlTemplate() (*hemltemplate.Template, error) {
         font-weight: bold;
     }
 
-    .content {
+    table {
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        font-size: 18px;
-        margin-top: 30px;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background-color: #f9f9f9;
+    }
 
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    /* 页面内容样式 */
+    .content {
+        width: 80%;
+        margin: 20px auto;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
     }
 
     .overview {
@@ -156,28 +175,37 @@ func GetInspectResultHtmlTemplate() (*hemltemplate.Template, error) {
         text-align: center;
     }
 
-  .table{
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
+    /* 全局样式 */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
     }
-    .tr{
+
+    /* 表格样式 */
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .tr {
         width: 100%;
         display: flex;
-        overflow: hidden;
-        border: 1px solid #000;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
     }
-    .td{
+
+    .td {
         flex: 1;
         display: flex;
         flex-wrap: wrap;
         white-space: pre-wrap;
-        border-right: 1px solid #000;
+        border-right: 1px solid #ddd;
         word-break: break-all;
-		padding: 3px;
+        padding: 3px;
     }
-
 </style>
 
 </html>

@@ -41,3 +41,8 @@ kubeEyeAuditResult.csv
 !.gitignore
 !cover.out
 !go.sum
+
+
+*.tar
+.docker_temp*
+/bin/*
