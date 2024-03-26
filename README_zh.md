@@ -88,9 +88,18 @@ kubectl apply -f plan.yaml
 
 #### 巡检报告获取
 ##### 查询巡检结果
+###### 命令行方式查询
 ```shell
 # 查看巡检结果名称，用于后续巡检报告下载
 kubectl get inspectresult
+```
+###### 浏览器查询 [New] [点击查看示例](examples/result/Inspect Results.html)
+```shell
+## 为 kubeeye-apiserver 创建 nodePort 类型svc
+kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=NodePort --name=ke-apiserver-node-port
+
+## 浏览器输入巡检报告url查看, 注意替换 <> 为环境中查询到的实际信息
+http://<node address>:<node port>/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults?type=html
 ```
 ##### 获取巡检报告
 ###### 命令行方式下载
@@ -103,7 +112,7 @@ curl http://<svc-ip>:9090/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults/<r
 
 ## 下载后可使用浏览器打开html文件查看
 ```
-###### 浏览器查看
+###### 浏览器查看 [点击查看示例](examples/result/inspect report.html)
 ```shell
 ## 为 kubeeye-apiserver 创建 nodePort 类型svc
 kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=NodePort --name=ke-apiserver-node-port
@@ -112,6 +121,8 @@ kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=Nod
 http://<node address>:<node port>/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults/<result name>?type=html
 ```
 ## 支持规则清单
+* 集群外节点shell巡检规则 [New]
+* Shell 规则
 * OPA 规则
 * PromQL 规则
 * 文件变更规则

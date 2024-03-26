@@ -88,10 +88,20 @@ kubectl apply -f plan.yaml
 
 #### Obtaining Inspection Reports
 ##### Check Inspection Results
+###### command
 ```shell
 # View the name of the inspection result for inspection report download.
 kubectl get inspectresult
 ```
+###### Web Console [New] [Examples](examples/result/Inspect Results.html)
+```shell
+## Get the address and port of kubeeye-apiserver service.
+kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=NodePort --name=ke-apiserver-node-port
+
+## Download the inspection report, and please replace <> with the actual information obtained from the environment.
+http://<node address>:<node port>/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults?type=html
+```
+
 ###### Command
 ```shell
 ## Get the address and port of kubeeye-apiserver service.
@@ -102,7 +112,7 @@ curl http://<svc-ip>:9090/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults/<r
 
 ## After downloading, you can use a browser to open the HTML file for viewing.
 ```
-###### Web Console
+###### Web Console [Examples](examples/result/inspect report.html)
 ```shell
 ## Create a nodePort type svc for kubeeye-apiserver.
 kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=NodePort --name=ke-apiserver-node-port
@@ -111,6 +121,8 @@ kubectl -n kubeeye-system expose deploy kubeeye-apiserver --port=9090 --type=Nod
 http://<node address>:<node port>/kapis/kubeeye.kubesphere.io/v1alpha2/inspectresults/<result name>?type=html
 ```
 ## Supported Rules List
+* Out of k8s cluster Shell [New]
+* Shell
 * OPA 
 * PromQL 
 * File Change
