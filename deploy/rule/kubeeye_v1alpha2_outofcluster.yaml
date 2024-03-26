@@ -1,0 +1,34 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  labels:
+    app.kubernetes.io/name: inspectrule
+    app.kubernetes.io/instance: inspectrule-sample
+    app.kubernetes.io/part-of: kubeeye
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kubeeye
+    kubeeye.kubesphere.io/rule-group: kubeeye_workloads_rego
+  name: inspect-outofcluster
+  namespace: kubeeye-system
+spec:
+  outOfCluster:
+    - name: hostname-m
+      command: hostname
+      rule: result regex ".*\d"
+      hosts:
+      - 10.42.186.234
+      - 10.42.186.236
+      - 10.42.186.237
+      # nodeSelects: []
+    - name: kdump-status-running
+      command: systemctl status kdump.service|grep Active
+      # hosts: []
+      nodeSelects:
+      - master
+      rule: result contains "running"
+    - name: os-version
+      command: cat /etc/.productinfo|grep release|grep Lance
+      rule: result regex ".*20230324"
+      # hosts: []
+      nodeSelects:
+      - node

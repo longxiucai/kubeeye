@@ -24,9 +24,6 @@ spec:
     - name: net.bridge.bridge-nf-call-iptables
       rule: net.bridge.bridge-nf-call-iptables = 1
       level: warning
-    - name: net.ipv4.ip_local_reserved_ports
-      rule: net.ipv4.ip_local_reserved_ports = "30000-32767"
-      level: warning
     - name: vm.max_map_count
       rule: vm.max_map_count = 262144
       level: warning

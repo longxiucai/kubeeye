@@ -11,14 +11,11 @@ metadata:
 spec:
   nodeInfo:
     - name: Cpu
-      rule: cpu > 20
+      rule: cpu < 40
       resourcesType: cpu
-      desc: CPU usage greater than 20%
     - name: Memory
-      rule: memory > 20
+      rule: memory < 40
       resourcesType: memory
-      desc: memory usage greater than 20%
     - name: filesystem
-      rule: filesystem > 20
+      rule: filesystem < 40
       resourcesType: filesystem
-      desc: filesystem usage greater than 20%

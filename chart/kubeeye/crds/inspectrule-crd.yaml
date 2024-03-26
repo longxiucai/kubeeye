@@ -135,6 +135,29 @@ spec:
                       type: string
                   type: object
                 type: array
+              outOfCluster:
+                items:
+                  properties:
+                    command:
+                      type: string
+                    desc:
+                      type: string
+                    hosts:
+                      items:
+                        type: string
+                      type: array
+                    level:
+                      type: string
+                    name:
+                      type: string
+                    nodeSelects:
+                      items:
+                        type: string
+                      type: array
+                    rule:
+                      type: string
+                  type: object
+                type: array
               prometheus:
                 items:
                   properties:

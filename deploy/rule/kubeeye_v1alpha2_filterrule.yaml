@@ -7,5 +7,5 @@ metadata:
 spec:
   fileFilter:
     - name: systemLog
-      path: /var/log/syslog
+      path: /var/log/messages
       rule: error

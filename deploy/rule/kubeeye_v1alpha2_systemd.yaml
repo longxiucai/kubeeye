@@ -12,9 +12,11 @@ metadata:
   namespace: kubeeye-system
 spec:
   systemd:
-    - name: docker
-      rule: docker == "active"
+    - name: containerd
+      rule: containerd == "active"
     - name: etcd
       rule: etcd == "active"
     - name: kubelet
       rule: kubelet == "active"
+    - name: kdump
+      rule: kdump == "active"

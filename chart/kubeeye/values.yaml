@@ -3,8 +3,8 @@ apiserver:
     env:
       ginMode: release
     image:
-      repository: kubespheredev/kubeeye-apiserver
-      tag: v1.0.0
+      repository: registry.kylincloud.org:4001/kubespheredev/kubeeye-apiserver
+      tag: v2.0.0-release
     imagePullPolicy: IfNotPresent
     resources:
       limits:
@@ -24,7 +24,7 @@ config:
     job:
       autoDelTime: 30
       backLimit: 5
-      image: kubespheredev/kubeeye-job:v1.0.0
+      image: registry.kylincloud.org:4001/kubespheredev/kubeeye-job:v2.0.0-release
       imagePullPolicy: IfNotPresent
       resources:
         limits:
@@ -45,7 +45,7 @@ controllerManager:
     - --logtostderr=true
     - --v=0
     image:
-      repository: kubesphere/kube-rbac-proxy
+      repository: registry.kylincloud.org:4001/docker.io/kubesphere/kube-rbac-proxy
       tag: v0.11.0
     resources:
       limits:
@@ -62,8 +62,8 @@ controllerManager:
     containerSecurityContext:
       allowPrivilegeEscalation: false
     image:
-      repository: kubespheredev/kubeeye-controller
-      tag: v1.0.0
+      repository: registry.kylincloud.org:4001/kubespheredev/kubeeye-controller
+      tag: v2.0.0-release
     imagePullPolicy: IfNotPresent
     resources:
       limits:
@@ -98,4 +98,5 @@ metricsService:
   type: ClusterIP
 pvc:
   inspectResult:
-    storageRequest: 10Gi
+    storageRequest: 3Gi
+  storageClassName: local-path
