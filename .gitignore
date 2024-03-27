@@ -43,6 +43,6 @@ kubeEyeAuditResult.csv
 !go.sum
 
 
-*.tar
+
 .docker_temp*
 /bin/*

@@ -1,1222 +1,1222 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: kubeeye-controller-manager
-  name: kubeeye-system
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
-  name: inspectplans.kubeeye.kubesphere.io
-spec:
-  group: kubeeye.kubesphere.io
-  names:
-    kind: InspectPlan
-    listKind: InspectPlanList
-    plural: inspectplans
-    singular: inspectplan
-  scope: Cluster
-  versions:
-  - name: v1alpha2
-    schema:
-      openAPIV3Schema:
-        description: InspectPlan is the Schema for the InspectPlans API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: InspectPlanSpec defines the desired state of InspectPlan
-            properties:
-              clusterName:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    provider:
-                      type: string
-                  type: object
-                type: array
-              kubeConfig:
-                type: string
-              maxTasks:
-                type: integer
-              one:
-                format: date-time
-                type: string
-              ruleNames:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                  type: object
-                type: array
-              schedule:
-                type: string
-              suspend:
-                type: boolean
-              timeout:
-                type: string
-            type: object
-          status:
-            description: InspectPlanStatus defines the observed state of InspectPlan
-            properties:
-              TaskNames:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    taskStatus:
-                      type: string
-                  type: object
-                type: array
-              lastScheduleTime:
-                format: date-time
-                type: string
-              lastTaskEndTime:
-                format: date-time
-                type: string
-              lastTaskName:
-                type: string
-              lastTaskStartTime:
-                format: date-time
-                type: string
-              lastTaskStatus:
-                type: string
-              nextScheduleTime:
-                format: date-time
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
-  name: inspectresults.kubeeye.kubesphere.io
-spec:
-  group: kubeeye.kubesphere.io
-  names:
-    kind: InspectResult
-    listKind: InspectResultList
-    plural: inspectresults
-    singular: inspectresult
-  scope: Cluster
-  versions:
-  - name: v1alpha2
-    schema:
-      openAPIV3Schema:
-        description: InspectResult is the Schema for the inspectresults API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: InspectResultSpec defines the desired state of InspectResult
-            properties:
-              commandResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    command:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    value:
-                      type: string
-                  type: object
-                type: array
-              componentResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    level:
-                      type: string
-                    name:
-                      type: string
-                  type: object
-                type: array
-              fileChangeResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    issues:
-                      items:
-                        type: string
-                      type: array
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    path:
-                      type: string
-                  type: object
-                type: array
-              fileFilterResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    issues:
-                      items:
-                        type: string
-                      type: array
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    path:
-                      type: string
-                  type: object
-                type: array
-              inspectCluster:
-                properties:
-                  name:
-                    type: string
-                  provider:
-                    type: string
-                type: object
-              inspectRuleTotal:
-                additionalProperties:
-                  type: integer
-                type: object
-              nodeInfo:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    level:
-                      type: string
-                    mount:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    type:
-                      type: string
-                    value:
-                      type: string
-                  type: object
-                type: array
-              opaResult:
-                description: kubeeye inspect result
-                properties:
-                  extraInfo:
-                    properties:
-                      namespacesList:
-                        items:
-                          type: string
-                        type: array
-                      workloadsCount:
-                        type: integer
-                    type: object
-                  percent:
-                    type: integer
-                  resourceResults:
-                    items:
-                      properties:
-                        name:
-                          type: string
-                        namespace:
-                          type: string
-                        resourceType:
-                          type: string
-                        resultItems:
-                          items:
-                            properties:
-                              level:
-                                type: string
-                              message:
-                                type: string
-                              reason:
-                                type: string
-                            type: object
-                          type: array
-                      type: object
-                    type: array
-                  scoreInfo:
-                    properties:
-                      dangerous:
-                        type: integer
-                      ignore:
-                        type: integer
-                      passing:
-                        type: integer
-                      score:
-                        type: integer
-                      total:
-                        type: integer
-                      warning:
-                        type: integer
-                    type: object
-                type: object
-              prometheusResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    result:
-                      type: string
-                  type: object
-                type: array
-              serviceConnectResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    endpoint:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                  type: object
-                type: array
-              sysctlResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    value:
-                      type: string
-                  type: object
-                type: array
-              systemdResult:
-                items:
-                  properties:
-                    assert:
-                      type: boolean
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    value:
-                      type: string
-                  type: object
-                type: array
-            type: object
-          status:
-            description: InspectResultStatus defines the observed state of InspectResult
-            properties:
-              complete:
-                type: boolean
-              duration:
-                type: string
-              level:
-                additionalProperties:
-                  type: integer
-                type: object
-              policy:
-                type: string
-              taskEndTime:
-                type: string
-              taskStartTime:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
-  name: inspectrules.kubeeye.kubesphere.io
-spec:
-  group: kubeeye.kubesphere.io
-  names:
-    kind: InspectRule
-    listKind: InspectRuleList
-    plural: inspectrules
-    singular: inspectrule
-  scope: Cluster
-  versions:
-  - name: v1alpha2
-    schema:
-      openAPIV3Schema:
-        description: InspectRule is the Schema for the InspectRule API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: InspectRuleSpec defines the desired state of InspectRule
-            properties:
-              customCommand:
-                items:
-                  properties:
-                    command:
-                      type: string
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              fileChange:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    path:
-                      type: string
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              fileFilter:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    path:
-                      type: string
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              nodeInfo:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    mount:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    resourcesType:
-                      type: string
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              opas:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    module:
-                      type: string
-                    name:
-                      type: string
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              prometheus:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    endpoint:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              prometheusEndpoint:
-                type: string
-              serviceConnect:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                    rule:
-                      type: string
-                    workspace:
-                      type: string
-                  type: object
-                type: array
-              sysctl:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    rule:
-                      type: string
-                  type: object
-                type: array
-              systemd:
-                items:
-                  properties:
-                    desc:
-                      type: string
-                    level:
-                      type: string
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    rule:
-                      type: string
-                  type: object
-                type: array
-            type: object
-          status:
-            description: InspectRuleStatus defines the observed state of InspectRule
-            properties:
-              endImportTime:
-                format: date-time
-                type: string
-              levelCount:
-                additionalProperties:
-                  type: integer
-                type: object
-              startImportTime:
-                format: date-time
-                type: string
-              state:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
-  name: inspecttasks.kubeeye.kubesphere.io
-spec:
-  group: kubeeye.kubesphere.io
-  names:
-    kind: InspectTask
-    listKind: InspectTaskList
-    plural: inspecttasks
-    singular: inspecttask
-  scope: Cluster
-  versions:
-  - name: v1alpha2
-    schema:
-      openAPIV3Schema:
-        description: InspectTask is the Schema for the InspectTasks API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: InspectTaskSpec defines the desired state of InspectTask
-            properties:
-              clusterName:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    provider:
-                      type: string
-                  type: object
-                type: array
-              inspectPolicy:
-                type: string
-              ruleNames:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    nodeName:
-                      type: string
-                    nodeSelector:
-                      additionalProperties:
-                        type: string
-                      type: object
-                  type: object
-                type: array
-              timeout:
-                type: string
-            type: object
-          status:
-            description: InspectTaskStatus defines the observed state of InspectTask
-            properties:
-              clusterInfo:
-                properties:
-                  namespacesCount:
-                    type: integer
-                  nodesCount:
-                    type: integer
-                  version:
-                    type: string
-                type: object
-              duration:
-                type: string
-              endTimestamp:
-                format: date-time
-                type: string
-              inspectRuleType:
-                items:
-                  type: string
-                type: array
-              jobPhase:
-                items:
-                  properties:
-                    jobName:
-                      type: string
-                    phase:
-                      type: string
-                  type: object
-                type: array
-              startTimestamp:
-                format: date-time
-                type: string
-              status:
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kubeeye-controller-manager
-  namespace: kubeeye-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: kubeeye-leader-election-role
-  namespace: kubeeye-system
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  name: kubeeye-manager-role
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - deletecollection
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - namespaces
-  - nodes
-  - pods
-  - secrets
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - create
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - create
-  - delete
-- apiGroups:
-  - batch
-  resources:
-  - jobs
-  verbs:
-  - create
-  - delete
-  - get
-- apiGroups:
-  - cluster.kubesphere.io
-  resources:
-  - clusters
-  verbs:
-  - get
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectplans
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectplans/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectplans/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectresults
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectresults/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectresults/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectrules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectrules/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspectrules/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspecttasks
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspecttasks/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kubeeye.kubesphere.io
-  resources:
-  - inspecttasks/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterrolebindings
-  - clusterroles
-  verbs:
-  - '*'
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: kubeeye-metrics-reader
-rules:
-- nonResourceURLs:
-  - /metrics
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: kubeeye-proxy-role
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: kubeeye-leader-election-rolebinding
-  namespace: kubeeye-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: kubeeye-leader-election-role
-subjects:
-- kind: ServiceAccount
-  name: kubeeye-controller-manager
-  namespace: kubeeye-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: kubeeye-manager-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: kubeeye-manager-role
-subjects:
-- kind: ServiceAccount
-  name: kubeeye-controller-manager
-  namespace: kubeeye-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: kubeeye-proxy-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: kubeeye-proxy-role
-subjects:
-- kind: ServiceAccount
-  name: kubeeye-controller-manager
-  namespace: kubeeye-system
----
-apiVersion: v1
-data:
-  config: "job:\n  autoDelTime: 30\n  backLimit: 5\n  image: kubespheredev/kubeeye-job:latest\n
-    \ imagePullPolicy: Always\n  resources:\n    limits:\n      cpu: 1000m\n      memory:
-    512Mi\n    requests:\n      cpu: 50m\n      memory: 256Mi\n  multiCluster:\n    member1:
-    \n      image: kubespheredev/kubeeye-job:latest\n      imagePullPolicy: Always"
-kind: ConfigMap
-metadata:
-  name: kubeeye-config
-  namespace: kubeeye-system
----
-apiVersion: v1
-data:
-  controller_manager_config.yaml: |
-    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
-    kind: ControllerManagerConfig
-    health:
-      healthProbeBindAddress: :8081
-    metrics:
-      bindAddress: 127.0.0.1:8080
-    webhook:
-      port: 9443
-    leaderElection:
-      leaderElect: true
-      resourceName: fa68b2a3.kubesphere.io
-kind: ConfigMap
-metadata:
-  name: kubeeye-manager-config
-  namespace: kubeeye-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kubeeye-apiserver
-  namespace: kubeeye-system
-spec:
-  ports:
-  - port: 9090
-    protocol: TCP
-    targetPort: 9090
-  selector:
-    app: kubeeye-apiserver
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    control-plane: kubeeye-controller-manager
-  name: kubeeye-controller-manager-metrics-service
-  namespace: kubeeye-system
-spec:
-  ports:
-  - name: https
-    port: 8443
-    protocol: TCP
-    targetPort: https
-  selector:
-    control-plane: kubeeye-controller-manager
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: kubeeye-inspect-result
-  namespace: kubeeye-system
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-  volumeMode: Filesystem
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: kubeeye-apiserver
-  name: kubeeye-apiserver
-  namespace: kubeeye-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kubeeye-apiserver
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: kubeeye-apiserver
-      name: kubeeye-apiserver
-    spec:
-      containers:
-      - env:
-        - name: GIN_MODE
-          value: release
-        image: kubespheredev/kubeeye-apiserver:latest
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /readyz
-            port: 9090
-          initialDelaySeconds: 15
-          periodSeconds: 20
-          timeoutSeconds: 10
-        name: kubeeye-apiserver
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 9090
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 10
-        resources:
-          limits:
-            cpu: 500m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        securityContext:
-          runAsGroup: 1000
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /etc/localtime
-          name: localtime
-        - mountPath: /kubeeye/data
-          name: inspect-result
-          readOnly: true
-      restartPolicy: Always
-      serviceAccountName: kubeeye-controller-manager
-      volumes:
-      - hostPath:
-          path: /etc/localtime
-        name: localtime
-      - name: inspect-result
-        persistentVolumeClaim:
-          claimName: kubeeye-inspect-result
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    control-plane: kubeeye-controller-manager
-  name: kubeeye-controller-manager
-  namespace: kubeeye-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      control-plane: kubeeye-controller-manager
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: manager
-      labels:
-        control-plane: kubeeye-controller-manager
-    spec:
-      containers:
-      - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=0
-        image: kubesphere/kube-rbac-proxy:v0.11.0
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: https
-          protocol: TCP
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 5m
-            memory: 64Mi
-      - args:
-        - --health-probe-bind-address=:8081
-        - --metrics-bind-address=127.0.0.1:8080
-        - --leader-elect
-        image: kubespheredev/kubeeye-controller:latest
-        imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8081
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: manager
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8081
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          limits:
-            cpu: 1500m
-            memory: 2048Mi
-          requests:
-            cpu: 200m
-            memory: 256Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-        volumeMounts:
-        - mountPath: /kubeeye/data
-          name: inspect-result
-        - mountPath: /etc/localtime
-          name: localtime
-      securityContext:
-        runAsGroup: 1000
-        runAsNonRoot: true
-        runAsUser: 1000
-      serviceAccountName: kubeeye-controller-manager
-      terminationGracePeriodSeconds: 10
-      volumes:
-      - name: inspect-result
-        persistentVolumeClaim:
-          claimName: kubeeye-inspect-result
-      - hostPath:
-          path: /etc/localtime
-        name: localtime
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   labels:
+#     control-plane: kubeeye-controller-manager
+#   name: kubeeye-system
+# ---
+# apiVersion: apiextensions.k8s.io/v1
+# kind: CustomResourceDefinition
+# metadata:
+#   annotations:
+#     controller-gen.kubebuilder.io/version: v0.11.1
+#   creationTimestamp: null
+#   name: inspectplans.kubeeye.kubesphere.io
+# spec:
+#   group: kubeeye.kubesphere.io
+#   names:
+#     kind: InspectPlan
+#     listKind: InspectPlanList
+#     plural: inspectplans
+#     singular: inspectplan
+#   scope: Cluster
+#   versions:
+#   - name: v1alpha2
+#     schema:
+#       openAPIV3Schema:
+#         description: InspectPlan is the Schema for the InspectPlans API
+#         properties:
+#           apiVersion:
+#             description: 'APIVersion defines the versioned schema of this representation
+#               of an object. Servers should convert recognized schemas to the latest
+#               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+#             type: string
+#           kind:
+#             description: 'Kind is a string value representing the REST resource this
+#               object represents. Servers may infer this from the endpoint the client
+#               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+#             type: string
+#           metadata:
+#             type: object
+#           spec:
+#             description: InspectPlanSpec defines the desired state of InspectPlan
+#             properties:
+#               clusterName:
+#                 items:
+#                   properties:
+#                     name:
+#                       type: string
+#                     provider:
+#                       type: string
+#                   type: object
+#                 type: array
+#               kubeConfig:
+#                 type: string
+#               maxTasks:
+#                 type: integer
+#               one:
+#                 format: date-time
+#                 type: string
+#               ruleNames:
+#                 items:
+#                   properties:
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                   type: object
+#                 type: array
+#               schedule:
+#                 type: string
+#               suspend:
+#                 type: boolean
+#               timeout:
+#                 type: string
+#             type: object
+#           status:
+#             description: InspectPlanStatus defines the observed state of InspectPlan
+#             properties:
+#               TaskNames:
+#                 items:
+#                   properties:
+#                     name:
+#                       type: string
+#                     taskStatus:
+#                       type: string
+#                   type: object
+#                 type: array
+#               lastScheduleTime:
+#                 format: date-time
+#                 type: string
+#               lastTaskEndTime:
+#                 format: date-time
+#                 type: string
+#               lastTaskName:
+#                 type: string
+#               lastTaskStartTime:
+#                 format: date-time
+#                 type: string
+#               lastTaskStatus:
+#                 type: string
+#               nextScheduleTime:
+#                 format: date-time
+#                 type: string
+#             type: object
+#         type: object
+#     served: true
+#     storage: true
+#     subresources:
+#       status: {}
+# ---
+# apiVersion: apiextensions.k8s.io/v1
+# kind: CustomResourceDefinition
+# metadata:
+#   annotations:
+#     controller-gen.kubebuilder.io/version: v0.11.1
+#   creationTimestamp: null
+#   name: inspectresults.kubeeye.kubesphere.io
+# spec:
+#   group: kubeeye.kubesphere.io
+#   names:
+#     kind: InspectResult
+#     listKind: InspectResultList
+#     plural: inspectresults
+#     singular: inspectresult
+#   scope: Cluster
+#   versions:
+#   - name: v1alpha2
+#     schema:
+#       openAPIV3Schema:
+#         description: InspectResult is the Schema for the inspectresults API
+#         properties:
+#           apiVersion:
+#             description: 'APIVersion defines the versioned schema of this representation
+#               of an object. Servers should convert recognized schemas to the latest
+#               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+#             type: string
+#           kind:
+#             description: 'Kind is a string value representing the REST resource this
+#               object represents. Servers may infer this from the endpoint the client
+#               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+#             type: string
+#           metadata:
+#             type: object
+#           spec:
+#             description: InspectResultSpec defines the desired state of InspectResult
+#             properties:
+#               commandResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     command:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     value:
+#                       type: string
+#                   type: object
+#                 type: array
+#               componentResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                   type: object
+#                 type: array
+#               fileChangeResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     issues:
+#                       items:
+#                         type: string
+#                       type: array
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     path:
+#                       type: string
+#                   type: object
+#                 type: array
+#               fileFilterResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     issues:
+#                       items:
+#                         type: string
+#                       type: array
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     path:
+#                       type: string
+#                   type: object
+#                 type: array
+#               inspectCluster:
+#                 properties:
+#                   name:
+#                     type: string
+#                   provider:
+#                     type: string
+#                 type: object
+#               inspectRuleTotal:
+#                 additionalProperties:
+#                   type: integer
+#                 type: object
+#               nodeInfo:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     level:
+#                       type: string
+#                     mount:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     type:
+#                       type: string
+#                     value:
+#                       type: string
+#                   type: object
+#                 type: array
+#               opaResult:
+#                 description: kubeeye inspect result
+#                 properties:
+#                   extraInfo:
+#                     properties:
+#                       namespacesList:
+#                         items:
+#                           type: string
+#                         type: array
+#                       workloadsCount:
+#                         type: integer
+#                     type: object
+#                   percent:
+#                     type: integer
+#                   resourceResults:
+#                     items:
+#                       properties:
+#                         name:
+#                           type: string
+#                         namespace:
+#                           type: string
+#                         resourceType:
+#                           type: string
+#                         resultItems:
+#                           items:
+#                             properties:
+#                               level:
+#                                 type: string
+#                               message:
+#                                 type: string
+#                               reason:
+#                                 type: string
+#                             type: object
+#                           type: array
+#                       type: object
+#                     type: array
+#                   scoreInfo:
+#                     properties:
+#                       dangerous:
+#                         type: integer
+#                       ignore:
+#                         type: integer
+#                       passing:
+#                         type: integer
+#                       score:
+#                         type: integer
+#                       total:
+#                         type: integer
+#                       warning:
+#                         type: integer
+#                     type: object
+#                 type: object
+#               prometheusResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     result:
+#                       type: string
+#                   type: object
+#                 type: array
+#               serviceConnectResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     endpoint:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     namespace:
+#                       type: string
+#                   type: object
+#                 type: array
+#               sysctlResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     value:
+#                       type: string
+#                   type: object
+#                 type: array
+#               systemdResult:
+#                 items:
+#                   properties:
+#                     assert:
+#                       type: boolean
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     value:
+#                       type: string
+#                   type: object
+#                 type: array
+#             type: object
+#           status:
+#             description: InspectResultStatus defines the observed state of InspectResult
+#             properties:
+#               complete:
+#                 type: boolean
+#               duration:
+#                 type: string
+#               level:
+#                 additionalProperties:
+#                   type: integer
+#                 type: object
+#               policy:
+#                 type: string
+#               taskEndTime:
+#                 type: string
+#               taskStartTime:
+#                 type: string
+#             type: object
+#         type: object
+#     served: true
+#     storage: true
+#     subresources:
+#       status: {}
+# ---
+# apiVersion: apiextensions.k8s.io/v1
+# kind: CustomResourceDefinition
+# metadata:
+#   annotations:
+#     controller-gen.kubebuilder.io/version: v0.11.1
+#   creationTimestamp: null
+#   name: inspectrules.kubeeye.kubesphere.io
+# spec:
+#   group: kubeeye.kubesphere.io
+#   names:
+#     kind: InspectRule
+#     listKind: InspectRuleList
+#     plural: inspectrules
+#     singular: inspectrule
+#   scope: Cluster
+#   versions:
+#   - name: v1alpha2
+#     schema:
+#       openAPIV3Schema:
+#         description: InspectRule is the Schema for the InspectRule API
+#         properties:
+#           apiVersion:
+#             description: 'APIVersion defines the versioned schema of this representation
+#               of an object. Servers should convert recognized schemas to the latest
+#               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+#             type: string
+#           kind:
+#             description: 'Kind is a string value representing the REST resource this
+#               object represents. Servers may infer this from the endpoint the client
+#               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+#             type: string
+#           metadata:
+#             type: object
+#           spec:
+#             description: InspectRuleSpec defines the desired state of InspectRule
+#             properties:
+#               customCommand:
+#                 items:
+#                   properties:
+#                     command:
+#                       type: string
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               fileChange:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     path:
+#                       type: string
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               fileFilter:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     path:
+#                       type: string
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               nodeInfo:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     mount:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     resourcesType:
+#                       type: string
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               opas:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     module:
+#                       type: string
+#                     name:
+#                       type: string
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               prometheus:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     endpoint:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               prometheusEndpoint:
+#                 type: string
+#               serviceConnect:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     namespace:
+#                       type: string
+#                     rule:
+#                       type: string
+#                     workspace:
+#                       type: string
+#                   type: object
+#                 type: array
+#               sysctl:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#               systemd:
+#                 items:
+#                   properties:
+#                     desc:
+#                       type: string
+#                     level:
+#                       type: string
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                     rule:
+#                       type: string
+#                   type: object
+#                 type: array
+#             type: object
+#           status:
+#             description: InspectRuleStatus defines the observed state of InspectRule
+#             properties:
+#               endImportTime:
+#                 format: date-time
+#                 type: string
+#               levelCount:
+#                 additionalProperties:
+#                   type: integer
+#                 type: object
+#               startImportTime:
+#                 format: date-time
+#                 type: string
+#               state:
+#                 type: string
+#             type: object
+#         type: object
+#     served: true
+#     storage: true
+#     subresources:
+#       status: {}
+# ---
+# apiVersion: apiextensions.k8s.io/v1
+# kind: CustomResourceDefinition
+# metadata:
+#   annotations:
+#     controller-gen.kubebuilder.io/version: v0.11.1
+#   creationTimestamp: null
+#   name: inspecttasks.kubeeye.kubesphere.io
+# spec:
+#   group: kubeeye.kubesphere.io
+#   names:
+#     kind: InspectTask
+#     listKind: InspectTaskList
+#     plural: inspecttasks
+#     singular: inspecttask
+#   scope: Cluster
+#   versions:
+#   - name: v1alpha2
+#     schema:
+#       openAPIV3Schema:
+#         description: InspectTask is the Schema for the InspectTasks API
+#         properties:
+#           apiVersion:
+#             description: 'APIVersion defines the versioned schema of this representation
+#               of an object. Servers should convert recognized schemas to the latest
+#               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+#             type: string
+#           kind:
+#             description: 'Kind is a string value representing the REST resource this
+#               object represents. Servers may infer this from the endpoint the client
+#               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+#             type: string
+#           metadata:
+#             type: object
+#           spec:
+#             description: InspectTaskSpec defines the desired state of InspectTask
+#             properties:
+#               clusterName:
+#                 items:
+#                   properties:
+#                     name:
+#                       type: string
+#                     provider:
+#                       type: string
+#                   type: object
+#                 type: array
+#               inspectPolicy:
+#                 type: string
+#               ruleNames:
+#                 items:
+#                   properties:
+#                     name:
+#                       type: string
+#                     nodeName:
+#                       type: string
+#                     nodeSelector:
+#                       additionalProperties:
+#                         type: string
+#                       type: object
+#                   type: object
+#                 type: array
+#               timeout:
+#                 type: string
+#             type: object
+#           status:
+#             description: InspectTaskStatus defines the observed state of InspectTask
+#             properties:
+#               clusterInfo:
+#                 properties:
+#                   namespacesCount:
+#                     type: integer
+#                   nodesCount:
+#                     type: integer
+#                   version:
+#                     type: string
+#                 type: object
+#               duration:
+#                 type: string
+#               endTimestamp:
+#                 format: date-time
+#                 type: string
+#               inspectRuleType:
+#                 items:
+#                   type: string
+#                 type: array
+#               jobPhase:
+#                 items:
+#                   properties:
+#                     jobName:
+#                       type: string
+#                     phase:
+#                       type: string
+#                   type: object
+#                 type: array
+#               startTimestamp:
+#                 format: date-time
+#                 type: string
+#               status:
+#                 type: string
+#             type: object
+#         type: object
+#     served: true
+#     storage: true
+#     subresources:
+#       status: {}
+# ---
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: kubeeye-controller-manager
+#   namespace: kubeeye-system
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: Role
+# metadata:
+#   name: kubeeye-leader-election-role
+#   namespace: kubeeye-system
+# rules:
+# - apiGroups:
+#   - ""
+#   resources:
+#   - configmaps
+#   verbs:
+#   - get
+#   - list
+#   - watch
+#   - create
+#   - update
+#   - patch
+#   - delete
+# - apiGroups:
+#   - coordination.k8s.io
+#   resources:
+#   - leases
+#   verbs:
+#   - get
+#   - list
+#   - watch
+#   - create
+#   - update
+#   - patch
+#   - delete
+# - apiGroups:
+#   - ""
+#   resources:
+#   - events
+#   verbs:
+#   - create
+#   - patch
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   creationTimestamp: null
+#   name: kubeeye-manager-role
+# rules:
+# - apiGroups:
+#   - ""
+#   resources:
+#   - configmaps
+#   verbs:
+#   - deletecollection
+# - apiGroups:
+#   - ""
+#   resources:
+#   - configmaps
+#   - namespaces
+#   - nodes
+#   - pods
+#   - secrets
+#   - services
+#   verbs:
+#   - get
+#   - list
+#   - watch
+# - apiGroups:
+#   - ""
+#   resources:
+#   - namespaces
+#   verbs:
+#   - create
+# - apiGroups:
+#   - ""
+#   resources:
+#   - serviceaccounts
+#   verbs:
+#   - create
+#   - delete
+# - apiGroups:
+#   - batch
+#   resources:
+#   - jobs
+#   verbs:
+#   - create
+#   - delete
+#   - get
+# - apiGroups:
+#   - cluster.kubesphere.io
+#   resources:
+#   - clusters
+#   verbs:
+#   - get
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectplans
+#   verbs:
+#   - create
+#   - delete
+#   - get
+#   - list
+#   - patch
+#   - update
+#   - watch
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectplans/finalizers
+#   verbs:
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectplans/status
+#   verbs:
+#   - get
+#   - patch
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectresults
+#   verbs:
+#   - create
+#   - delete
+#   - get
+#   - list
+#   - patch
+#   - update
+#   - watch
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectresults/finalizers
+#   verbs:
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectresults/status
+#   verbs:
+#   - get
+#   - patch
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectrules
+#   verbs:
+#   - create
+#   - delete
+#   - get
+#   - list
+#   - patch
+#   - update
+#   - watch
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectrules/finalizers
+#   verbs:
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspectrules/status
+#   verbs:
+#   - get
+#   - patch
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspecttasks
+#   verbs:
+#   - create
+#   - delete
+#   - get
+#   - list
+#   - patch
+#   - update
+#   - watch
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspecttasks/finalizers
+#   verbs:
+#   - update
+# - apiGroups:
+#   - kubeeye.kubesphere.io
+#   resources:
+#   - inspecttasks/status
+#   verbs:
+#   - get
+#   - patch
+#   - update
+# - apiGroups:
+#   - rbac.authorization.k8s.io
+#   resources:
+#   - clusterrolebindings
+#   - clusterroles
+#   verbs:
+#   - '*'
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: kubeeye-metrics-reader
+# rules:
+# - nonResourceURLs:
+#   - /metrics
+#   verbs:
+#   - get
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: kubeeye-proxy-role
+# rules:
+# - apiGroups:
+#   - authentication.k8s.io
+#   resources:
+#   - tokenreviews
+#   verbs:
+#   - create
+# - apiGroups:
+#   - authorization.k8s.io
+#   resources:
+#   - subjectaccessreviews
+#   verbs:
+#   - create
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: kubeeye-leader-election-rolebinding
+#   namespace: kubeeye-system
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: Role
+#   name: kubeeye-leader-election-role
+# subjects:
+# - kind: ServiceAccount
+#   name: kubeeye-controller-manager
+#   namespace: kubeeye-system
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: kubeeye-manager-rolebinding
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: kubeeye-manager-role
+# subjects:
+# - kind: ServiceAccount
+#   name: kubeeye-controller-manager
+#   namespace: kubeeye-system
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: kubeeye-proxy-rolebinding
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: kubeeye-proxy-role
+# subjects:
+# - kind: ServiceAccount
+#   name: kubeeye-controller-manager
+#   namespace: kubeeye-system
+# ---
+# apiVersion: v1
+# data:
+#   config: "job:\n  autoDelTime: 30\n  backLimit: 5\n  image: kubespheredev/kubeeye-job:latest\n
+#     \ imagePullPolicy: Always\n  resources:\n    limits:\n      cpu: 1000m\n      memory:
+#     512Mi\n    requests:\n      cpu: 50m\n      memory: 256Mi\n  multiCluster:\n    member1:
+#     \n      image: kubespheredev/kubeeye-job:latest\n      imagePullPolicy: Always"
+# kind: ConfigMap
+# metadata:
+#   name: kubeeye-config
+#   namespace: kubeeye-system
+# ---
+# apiVersion: v1
+# data:
+#   controller_manager_config.yaml: |
+#     apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+#     kind: ControllerManagerConfig
+#     health:
+#       healthProbeBindAddress: :8081
+#     metrics:
+#       bindAddress: 127.0.0.1:8080
+#     webhook:
+#       port: 9443
+#     leaderElection:
+#       leaderElect: true
+#       resourceName: fa68b2a3.kubesphere.io
+# kind: ConfigMap
+# metadata:
+#   name: kubeeye-manager-config
+#   namespace: kubeeye-system
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: kubeeye-apiserver
+#   namespace: kubeeye-system
+# spec:
+#   ports:
+#   - port: 9090
+#     protocol: TCP
+#     targetPort: 9090
+#   selector:
+#     app: kubeeye-apiserver
+#   type: ClusterIP
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     control-plane: kubeeye-controller-manager
+#   name: kubeeye-controller-manager-metrics-service
+#   namespace: kubeeye-system
+# spec:
+#   ports:
+#   - name: https
+#     port: 8443
+#     protocol: TCP
+#     targetPort: https
+#   selector:
+#     control-plane: kubeeye-controller-manager
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: kubeeye-inspect-result
+#   namespace: kubeeye-system
+# spec:
+#   accessModes:
+#   - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Gi
+#   volumeMode: Filesystem
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   labels:
+#     app: kubeeye-apiserver
+#   name: kubeeye-apiserver
+#   namespace: kubeeye-system
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: kubeeye-apiserver
+#   strategy:
+#     rollingUpdate:
+#       maxSurge: 25%
+#       maxUnavailable: 25%
+#     type: RollingUpdate
+#   template:
+#     metadata:
+#       labels:
+#         app: kubeeye-apiserver
+#       name: kubeeye-apiserver
+#     spec:
+#       containers:
+#       - env:
+#         - name: GIN_MODE
+#           value: release
+#         image: kubespheredev/kubeeye-apiserver:latest
+#         imagePullPolicy: IfNotPresent
+#         livenessProbe:
+#           httpGet:
+#             path: /readyz
+#             port: 9090
+#           initialDelaySeconds: 15
+#           periodSeconds: 20
+#           timeoutSeconds: 10
+#         name: kubeeye-apiserver
+#         readinessProbe:
+#           httpGet:
+#             path: /healthz
+#             port: 9090
+#           initialDelaySeconds: 5
+#           periodSeconds: 10
+#           timeoutSeconds: 10
+#         resources:
+#           limits:
+#             cpu: 500m
+#             memory: 256Mi
+#           requests:
+#             cpu: 100m
+#             memory: 128Mi
+#         securityContext:
+#           runAsGroup: 1000
+#           runAsNonRoot: true
+#           runAsUser: 1000
+#         volumeMounts:
+#         - mountPath: /etc/localtime
+#           name: localtime
+#         - mountPath: /kubeeye/data
+#           name: inspect-result
+#           readOnly: true
+#       restartPolicy: Always
+#       serviceAccountName: kubeeye-controller-manager
+#       volumes:
+#       - hostPath:
+#           path: /etc/localtime
+#         name: localtime
+#       - name: inspect-result
+#         persistentVolumeClaim:
+#           claimName: kubeeye-inspect-result
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   labels:
+#     control-plane: kubeeye-controller-manager
+#   name: kubeeye-controller-manager
+#   namespace: kubeeye-system
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       control-plane: kubeeye-controller-manager
+#   template:
+#     metadata:
+#       annotations:
+#         kubectl.kubernetes.io/default-container: manager
+#       labels:
+#         control-plane: kubeeye-controller-manager
+#     spec:
+#       containers:
+#       - args:
+#         - --secure-listen-address=0.0.0.0:8443
+#         - --upstream=http://127.0.0.1:8080/
+#         - --logtostderr=true
+#         - --v=0
+#         image: kubesphere/kube-rbac-proxy:v0.11.0
+#         name: kube-rbac-proxy
+#         ports:
+#         - containerPort: 8443
+#           name: https
+#           protocol: TCP
+#         resources:
+#           limits:
+#             cpu: 500m
+#             memory: 128Mi
+#           requests:
+#             cpu: 5m
+#             memory: 64Mi
+#       - args:
+#         - --health-probe-bind-address=:8081
+#         - --metrics-bind-address=127.0.0.1:8080
+#         - --leader-elect
+#         image: kubespheredev/kubeeye-controller:latest
+#         imagePullPolicy: Always
+#         livenessProbe:
+#           httpGet:
+#             path: /healthz
+#             port: 8081
+#           initialDelaySeconds: 15
+#           periodSeconds: 20
+#         name: manager
+#         readinessProbe:
+#           httpGet:
+#             path: /readyz
+#             port: 8081
+#           initialDelaySeconds: 5
+#           periodSeconds: 10
+#         resources:
+#           limits:
+#             cpu: 1500m
+#             memory: 2048Mi
+#           requests:
+#             cpu: 200m
+#             memory: 256Mi
+#         securityContext:
+#           allowPrivilegeEscalation: false
+#         volumeMounts:
+#         - mountPath: /kubeeye/data
+#           name: inspect-result
+#         - mountPath: /etc/localtime
+#           name: localtime
+#       securityContext:
+#         runAsGroup: 1000
+#         runAsNonRoot: true
+#         runAsUser: 1000
+#       serviceAccountName: kubeeye-controller-manager
+#       terminationGracePeriodSeconds: 10
+#       volumes:
+#       - name: inspect-result
+#         persistentVolumeClaim:
+#           claimName: kubeeye-inspect-result
+#       - hostPath:
+#           path: /etc/localtime
+#         name: localtime
