@@ -47,6 +47,7 @@ func (c *serviceConnectInspect) RunInspect(ctx context.Context, rules []kubeeyev
 			componentResultItem := kubeeyev1alpha2.ServiceConnectResultItem{
 				Endpoint:   item.Rule,
 				BaseResult: kubeeyev1alpha2.BaseResult{Name: item.Name, Assert: !isConnected},
+				Namespace:  item.Namespace,
 			}
 			if isConnected {
 				klog.Infof("success connect to：%s\n", item.Rule)
@@ -108,6 +109,7 @@ func GetInspectComponent(ctx context.Context, clients *kube.KubernetesClient, se
 							Rule:  fmt.Sprintf("%s.%s.svc.cluster.local:%d", s.Name, s.Namespace, s.Spec.Ports[0].Port),
 							Level: service.Level,
 						},
+						Namespace: namespace.Name,
 					}
 
 				}
@@ -120,6 +122,7 @@ func GetInspectComponent(ctx context.Context, clients *kube.KubernetesClient, se
 						Rule:  fmt.Sprintf("%s.%s.svc.cluster.local:%d", s.Name, s.Namespace, s.Spec.Ports[0].Port),
 						Level: service.Level,
 					},
+					Namespace: service.Namespace,
 				}
 
 			}
@@ -131,6 +134,7 @@ func GetInspectComponent(ctx context.Context, clients *kube.KubernetesClient, se
 						Rule:  fmt.Sprintf("%s.%s.svc.cluster.local:%d", s.Name, s.Namespace, s.Spec.Ports[0].Port),
 						Level: service.Level,
 					},
+					Namespace: s.Namespace,
 				}
 			}
 		}

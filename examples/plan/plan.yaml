@@ -26,6 +26,9 @@ spec:
     - name: inspect-rule-systemd
     - name: inspect-rule-command
     - name: inspect-outofcluster
+    - name: inspect-rule-event
+    - name: inspect-rule-namespace
+    - name: services-connect
   # nodeName: master
   # nodeSelector:
   #   node-role.kubernetes.io/master: ""        

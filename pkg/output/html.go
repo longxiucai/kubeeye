@@ -205,10 +205,23 @@ func getOpaList(result []v1alpha2.ResourceResult) (opaList []renderNode) {
 
 func getPrometheus(pro []v1alpha2.PrometheusResult) []renderNode {
 	var prometheus []renderNode
+	header := renderNode{Header: true,
+		Children: []renderNode{
+			{Text: "name"},
+			{Text: "assert"},
+			{Text: "result"},
+			{Text: "level"},
+		}}
+	prometheus = append(prometheus, header)
 	for _, p := range pro {
-		value := renderNode{}
-		value.Children = append(value.Children, renderNode{Text: p.Result})
-		prometheus = append(prometheus, value)
+		// value := renderNode{}
+		value := []renderNode{{Text: p.Name},
+			{Text: utils.BoolToString(p.Assert)},
+			{Text: p.Result},
+			{Text: string(p.Level)}}
+		// value.Children = append(value.Children, renderNode{Text: p.Result})
+		prometheus = append(prometheus, renderNode{Children: value})
+		// prometheus = append(prometheus, value)
 	}
 	return prometheus
 }

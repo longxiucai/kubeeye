@@ -3,8 +3,8 @@ apiserver:
     env:
       ginMode: release
     image:
-      repository: registry.kylincloud.org:4001/kubespheredev/kubeeye-apiserver
-      tag: v2.0.0-release
+      repository: registry.kylincloud.org:4001/kubeeye-apiserver
+      tag: v2.0.1-release
     imagePullPolicy: IfNotPresent
     resources:
       limits:
@@ -18,13 +18,13 @@ apiserver:
     protocol: TCP
     targetPort: 9090
   replicas: 1
-  type: ClusterIP
+  type: NodePort
 config:
   config: |-
     job:
       autoDelTime: 30
       backLimit: 5
-      image: registry.kylincloud.org:4001/kubespheredev/kubeeye-job:v2.0.0-release
+      image: registry.kylincloud.org:4001/kubeeye-job:v2.0.1-release
       imagePullPolicy: IfNotPresent
       resources:
         limits:
@@ -62,8 +62,8 @@ controllerManager:
     containerSecurityContext:
       allowPrivilegeEscalation: false
     image:
-      repository: registry.kylincloud.org:4001/kubespheredev/kubeeye-controller
-      tag: v2.0.0-release
+      repository: registry.kylincloud.org:4001/kubeeye-controller
+      tag: v2.0.1-release
     imagePullPolicy: IfNotPresent
     resources:
       limits:
