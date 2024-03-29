@@ -19,16 +19,17 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	kubeeyeInformers "github.com/kubesphere/kubeeye/clients/informers/externalversions/kubeeye"
 	"github.com/kubesphere/kubeeye/pkg/constant"
 	"github.com/kubesphere/kubeeye/pkg/kube"
 	"github.com/kubesphere/kubeeye/pkg/utils"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/robfig/cron/v3"
 	kubeErr "k8s.io/apimachinery/pkg/api/errors"
@@ -129,13 +130,13 @@ func (r *InspectPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		klog.Info("inspect plan suspend")
 		return ctrl.Result{}, nil
 	}
-
+	now := time.Now()
 	if plan.Spec.Once != nil {
 		if !utils.IsEmptyValue(plan.Status.LastTaskName) {
 			return ctrl.Result{}, nil
 		}
 		if !plan.Spec.Once.After(time.Now()) {
-			taskName, err := r.createInspectTask(plan, ctx)
+			taskName, err := r.createInspectTask(plan, now, ctx)
 			if err != nil {
 				klog.Error("failed to create InspectTask.", err)
 				return ctrl.Result{}, err
@@ -156,7 +157,7 @@ func (r *InspectPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if !utils.IsEmptyValue(plan.Status.LastTaskName) {
 			return ctrl.Result{}, nil
 		}
-		taskName, err := r.createInspectTask(plan, ctx)
+		taskName, err := r.createInspectTask(plan, now, ctx)
 		if err != nil {
 			klog.Error("failed to create InspectTask.", err)
 			return ctrl.Result{}, err
@@ -173,10 +174,9 @@ func (r *InspectPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		klog.Error("Unparseable schedule.\n", err)
 		return ctrl.Result{}, nil
 	}
-	now := time.Now()
 	scheduledTime := nextScheduledTimeDuration(schedule, plan.Status.LastScheduleTime)
 	if plan.Status.LastScheduleTime == nil || plan.Status.LastScheduleTime.Add(*scheduledTime).Before(now) {
-		taskName, err := r.createInspectTask(plan, ctx)
+		taskName, err := r.createInspectTask(plan, now, ctx)
 		if err != nil {
 			klog.Error("failed to create InspectTask.", err)
 			return ctrl.Result{}, err
@@ -212,11 +212,11 @@ func nextScheduledTimeDuration(sched cron.Schedule, now *metav1.Time) *time.Dura
 	return &nextTime
 }
 
-func (r *InspectPlanReconciler) createInspectTask(plan *kubeeyev1alpha2.InspectPlan, ctx context.Context) (string, error) {
+func (r *InspectPlanReconciler) createInspectTask(plan *kubeeyev1alpha2.InspectPlan, planTime time.Time, ctx context.Context) (string, error) {
 	ownerController := true
 	inspectTask := kubeeyev1alpha2.InspectTask{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   fmt.Sprintf("%s-%s", plan.Name, time.Now().Format("20060102-15-04")),
+			Name:   fmt.Sprintf("%s-%s", plan.Name, planTime.Format("20060102-15-04")),
 			Labels: map[string]string{constant.LabelPlanName: plan.Name},
 			Annotations: map[string]string{constant.AnnotationInspectType: func() string {
 				if plan.Spec.Schedule == nil {

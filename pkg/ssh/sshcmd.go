@@ -116,8 +116,8 @@ func (s *SSH) Cmd(host net.IP, cmd string) ([]byte, error) {
 	defer session.Close()
 	b, err := session.CombinedOutput(cmd)
 	if err != nil {
-		klog.Infof("[ssh][%s]run command failed [%s]", host, cmd)
-		return b, fmt.Errorf("[ssh][%s]run command failed [%s]", host, cmd)
+		klog.Infof("[ssh][%s]run command failed [%s] error:%v", host, cmd, err)
+		return b, fmt.Errorf("[ssh][%s]run command failed [%s] error:%v", host, cmd, err)
 	}
 
 	return b, nil
