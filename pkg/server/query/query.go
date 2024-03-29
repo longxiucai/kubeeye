@@ -1,12 +1,13 @@
 package query
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/kubesphere/kubeeye/pkg/utils"
-	"k8s.io/utils/strings/slices"
 	"net/url"
 	"sort"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/kubesphere/kubeeye/pkg/utils"
+	"k8s.io/utils/strings/slices"
 )
 
 const (
@@ -66,7 +67,14 @@ func ParseQuery(g *gin.Context) *Query {
 	q := NewQuery()
 	q.Pagination = ParsePagination(g.Request.URL.Query())
 	q.Filters = q.ParseFilter(g.Request.URL.Query())
-	q.SortBy = SortBy(g.Request.URL.Query().Get(OrderBy))
+
+	sortBy := SortBy(g.Request.URL.Query().Get(OrderBy))
+	if sortBy != "" {
+		q.SortBy = sortBy
+	} else {
+		q.SortBy = CreateTime
+	}
+
 	q.Ascending = q.ParseAscending(g.Request.URL.Query().Get(Ascending))
 	q.LabelSelector = g.Request.URL.Query().Get(LabelSelector)
 	return q
@@ -106,7 +114,7 @@ func (q *Query) ParseFilter(values url.Values) *Filter {
 
 func NewPagination() *Pagination {
 	return &Pagination{
-		Limit:  10,
+		Limit:  0,
 		Offset: 0,
 	}
 }
