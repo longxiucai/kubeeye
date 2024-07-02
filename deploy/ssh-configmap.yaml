@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: out-of-cluster-ssh-config
+  namespace: kubeeye-system
+data:
+  config: |
+      ssh:
+        passwd: Kcnos&3636.
+      hosts:
+        - ips: [ 10.42.186.232,10.42.186.233,10.42.186.234 ]
+          roles: [ master ]
+          ssh:
+            passwd: Kcnos&3636.
+        - ips: [ 10.42.186.235,10.42.186.236,10.42.186.237 ]
+          roles: [ node ]

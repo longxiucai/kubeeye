@@ -36,7 +36,7 @@ IMAGE_TAG_BASE ?= kubesphere.io/kubeeye
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= kubesphere/kubeeye:latest
+IMG ?= jw008/kubeeye-controller:dev
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
 
@@ -235,3 +235,28 @@ uninstallke:
 	rm -f /usr/local/bin/${BINARY}
 runke:
 	go run cmd/ke/main.go audit
+
+.PHONY: generate-client
+generate-client:
+	./hack/generate_group.sh client,lister,informer github.com/kubesphere/kubeeye/clients github.com/kubesphere/kubeeye/apis "kubeeye:v1alpha2" --output-base=./ -h ./hack/boilerplate.go.txt -v 10
+	rm -rf ./clients
+	mv github.com/kubesphere/kubeeye/clients ./
+	rm -rf ./github.com
+
+
+LOCALBIN = $(shell pwd)/bin
+HELMIFY ?= $(LOCALBIN)/helmify
+
+.PHONY: helmify
+helmify: $(HELMIFY) ## Download helmify locally if necessary.
+$(HELMIFY): $(LOCALBIN)
+	test -s $(LOCALBIN)/helmify || GOBIN=$(LOCALBIN) go install github.com/arttor/helmify/cmd/helmify@latest
+
+helm: manifests kustomize helmify
+	$(KUSTOMIZE) build config/default | $(HELMIFY) --crd-dir chart/kubeeye
+
+swaggerify: ## Download swaggerify locally if necessary.
+	test -s $(LOCALBIN)/swag || GOBIN=$(LOCALBIN) go install github.com/swaggo/swag/cmd/swag@latest
+
+generate-swagger-docs: swaggerify ## Generate swagger docs.
+	swag init -d cmd/apiserver,pkg/server/api -o ./swaggerDocs --parseDependency

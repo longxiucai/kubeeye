@@ -1,0 +1,102 @@
+apiserver:
+  kubeeyeApiserver:
+    env:
+      ginMode: release
+    image:
+      repository: registry.kylincloud.org:4001/kubeeye-apiserver
+      tag: v2.0.1-release
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  ports:
+  - port: 9090
+    protocol: TCP
+    targetPort: 9090
+  replicas: 1
+  type: NodePort
+config:
+  config: |-
+    job:
+      autoDelTime: 30
+      backLimit: 5
+      image: registry.kylincloud.org:4001/kubeeye-job:v2.0.1-release
+      imagePullPolicy: IfNotPresent
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 512Mi
+        requests:
+          cpu: 50m
+          memory: 256Mi
+#      multiCluster:
+#        member1:
+#          image: kubespheredev/kubeeye-job:v1.0.0-rc.3
+#          imagePullPolicy: IfNotPresent
+controllerManager:
+  kubeRbacProxy:
+    args:
+    - --secure-listen-address=0.0.0.0:8443
+    - --upstream=http://127.0.0.1:8080/
+    - --logtostderr=true
+    - --v=0
+    image:
+      repository: registry.kylincloud.org:4001/docker.io/kubesphere/kube-rbac-proxy
+      tag: v0.11.0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 5m
+        memory: 64Mi
+  manager:
+    args:
+    - --health-probe-bind-address=:8081
+    - --metrics-bind-address=127.0.0.1:8080
+    - --leader-elect
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+    image:
+      repository: registry.kylincloud.org:4001/kubeeye-controller
+      tag: v2.0.1-release
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1500m
+        memory: 2Gi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+  replicas: 1
+  serviceAccount:
+    annotations: {}
+kubernetesClusterDomain: cluster.local
+managerConfig:
+  controllerManagerConfigYaml: |-
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: fa68b2a3.kubesphere.io
+metricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  type: ClusterIP
+pvc:
+  inspectResult:
+    storageRequest: 3Gi
+  storageClassName: local-path

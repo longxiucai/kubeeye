@@ -1,0 +1,9 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  name: services-connect
+spec:
+  serviceConnect:
+    - namespace: kube-system
+      level: warning
+    - name: kubeeye-apiserver

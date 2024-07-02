@@ -9,26 +9,27 @@ rules:
   - ""
   resources:
   - configmaps
-  - deployments
+  verbs:
+  - deletecollection
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
   - namespaces
+  - nodes
+  - pods
+  - secrets
   - services
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - ""
   resources:
-  - events
   - namespaces
-  - nodes
   verbs:
-  - get
-  - list
+  - create
 - apiGroups:
   - ""
   resources:
@@ -36,52 +37,24 @@ rules:
   verbs:
   - create
   - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - '*'
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
 - apiGroups:
   - batch
   resources:
-  - '*'
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - '*'
+  - jobs
   verbs:
   - create
   - delete
   - get
-  - list
-  - patch
-  - update
-  - watch
 - apiGroups:
-  - events.k8s.io
+  - cluster.kubesphere.io
   resources:
-  - events
+  - clusters
   verbs:
-  - '*'
+  - get
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - clusterinsights
+  - inspectplans
   verbs:
   - create
   - delete
@@ -93,13 +66,13 @@ rules:
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - clusterinsights/finalizers
+  - inspectplans/finalizers
   verbs:
   - update
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - clusterinsights/status
+  - inspectplans/status
   verbs:
   - get
   - patch
@@ -107,7 +80,7 @@ rules:
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - kubeeyecronjobs
+  - inspectresults
   verbs:
   - create
   - delete
@@ -119,21 +92,21 @@ rules:
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - kubeeyecronjobs/finalizers
+  - inspectresults/finalizers
   verbs:
   - update
 - apiGroups:
   - kubeeye.kubesphere.io
   resources:
-  - kubeeyecronjobs/status
+  - inspectresults/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - kubeeyeplugins.kubesphere.io
+  - kubeeye.kubesphere.io
   resources:
-  - pluginsubscriptions
+  - inspectrules
   verbs:
   - create
   - delete
@@ -143,15 +116,41 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kubeeyeplugins.kubesphere.io
+  - kubeeye.kubesphere.io
   resources:
-  - pluginsubscriptions/finalizers
+  - inspectrules/finalizers
   verbs:
   - update
 - apiGroups:
-  - kubeeyeplugins.kubesphere.io
+  - kubeeye.kubesphere.io
   resources:
-  - pluginsubscriptions/status
+  - inspectrules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kubeeye.kubesphere.io
+  resources:
+  - inspecttasks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubeeye.kubesphere.io
+  resources:
+  - inspecttasks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kubeeye.kubesphere.io
+  resources:
+  - inspecttasks/status
   verbs:
   - get
   - patch
@@ -159,6 +158,7 @@ rules:
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
-  - '*'
+  - clusterrolebindings
+  - clusterroles
   verbs:
   - '*'

@@ -1,0 +1,21 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  labels:
+    app.kubernetes.io/name: inspectrule
+    app.kubernetes.io/instance: inspectrule-sample
+    app.kubernetes.io/part-of: kubeeye
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kubeeye
+  name: inspect-rule-node-info
+spec:
+  nodeInfo:
+    - name: Cpu
+      rule: cpu < 40
+      resourcesType: cpu
+    - name: Memory
+      rule: memory < 40
+      resourcesType: memory
+    - name: filesystem
+      rule: filesystem < 40
+      resourcesType: filesystem

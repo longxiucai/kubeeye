@@ -17,14 +17,10 @@ package kube
 import (
 	"time"
 
-	kubeeyev1alpha1 "github.com/kubesphere/kubeeye/apis/kubeeye/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
-
-var K8sResourcesChan = make(chan K8SResource, 6)
-var PluginResultChan = make(chan kubeeyev1alpha1.PluginsResult)
 
 type K8SResource struct {
 	ServerVersion    string
@@ -36,6 +32,7 @@ type K8SResource struct {
 	NameSpacesCount  int
 	NameSpacesList   []string
 	Deployments      *unstructured.UnstructuredList
+	Pods             *unstructured.UnstructuredList
 	DaemonSets       *unstructured.UnstructuredList
 	StatefulSets     *unstructured.UnstructuredList
 	Jobs             *unstructured.UnstructuredList
@@ -76,10 +73,6 @@ type ResourceProvider struct {
 	ConfigMap       []corev1.ConfigMap
 	ProblemDetector []corev1.Event
 	Workloads       []Workload
-}
-
-type ReturnMsg struct {
-	what string
 }
 
 type Certificate struct {

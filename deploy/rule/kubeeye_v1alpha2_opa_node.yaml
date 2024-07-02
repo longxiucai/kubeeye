@@ -1,0 +1,53 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  labels:
+    app.kubernetes.io/created-by: kubeeye
+    app.kubernetes.io/instance: inspectrules-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: inspectrules
+    app.kubernetes.io/part-of: kubeeye
+    kubeeye.kubesphere.io/rule-group: kubeeye_nodes_rego
+  name: inspect-rule-node
+  namespace: kubeeye-system
+spec:
+  opas:
+  - module: kubeeye_nodes_rego
+    name: FalseNodeConditionsRule
+    rule: |-
+      package kubeeye_nodes_rego
+  
+      import future.keywords.if
+      import future.keywords.in
+      
+      deny[msg] {
+        resource := input
+      	type := resource.Object.kind
+
+      	type == "Node"
+      	level := "warning"
+
+      	some condition in resource.Object.status.conditions
+      	msg := f(condition, type, level, resource.Object.metadata.name)
+      }
+
+      f(condition, type, level, resourcename) = result if {
+      	condition.type == "Ready"
+      	condition.status == "False"
+      	result = {
+      		"Name": sprintf("%v", [resourcename]),
+      		"Type": sprintf("%v", [type]),
+      		"Level": sprintf("%v", [level]),
+      		"Message": sprintf("%v", [condition.reason]),
+      		"Reason": sprintf("%v", [condition.message]),
+      	}
+      } else = {
+      	"Name": sprintf("%v", [resourcename]),
+      	"Type": sprintf("%v", [type]),
+      	"Level": sprintf("%v", [level]),
+      	"Message": sprintf("%v", [condition.reason]),
+      	"Reason": sprintf("%v", [condition.message]),
+      } {
+      	condition.type != "Ready"
+      	condition.status == "True"
+      }

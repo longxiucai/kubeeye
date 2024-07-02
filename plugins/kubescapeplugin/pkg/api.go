@@ -1,10 +1,11 @@
 package pkg
 
 import (
-	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	url2 "net/url"
 	"time"
 )
 
@@ -13,7 +14,7 @@ func KubeScapeAPI() {
 	mux.Handle("/plugins", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		result, err := KubescapeAudit()
 		if err != nil {
-			log.Printf("KubeScape audit failed: %+v", err)
+			log.Printf("KubeScape inspect failed: %+v", err)
 		}
 		jsonResults, err := json.Marshal(&result)
 		if err != nil {
@@ -27,32 +28,36 @@ func KubeScapeAPI() {
 
 	mux.Handle("/start", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
-		pluginAudit()
+		pluginAudit(request)
 	}))
 
 	mux.Handle("/healthz", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 	}))
 
-	log.Println("KubeScape audit API ready")
+	log.Println("KubeScape inspect API ready")
 	log.Fatal(http.ListenAndServe(":80", mux))
 }
 
-func pluginAudit() {
+func pluginAudit(request *http.Request) {
+	query := request.URL.Query()
+	taskName := query.Get("taskname")
+	kubeeyeSvc := query.Get("kubeeyesvc")
 	go func() {
 		result, err := KubescapeAudit()
 		if err != nil {
-			log.Printf("KubeScape audit failed: %+v", err)
+			log.Printf("KubeScape inspect failed: %+v", err)
 		}
 		jsonResults, err := json.Marshal(&result)
 		if err != nil {
 			log.Printf("Marshal KubeScape result failed: %+v", err)
 		}
 
-		req, err := http.NewRequest("POST", "http://kubeeye-controller-manager-service.kubeeye-system.svc/plugins?name=kubesacpe", bytes.NewReader(jsonResults))
-		if err != nil {
-			log.Printf("Create request failed: %+v", err)
-		}
+		data := &url2.Values{}
+		data.Set("pluginname", "kubesacpe")
+		data.Set("taskname", taskName)
+		data.Set("pluginresult", string(jsonResults))
+		url := fmt.Sprintf("http://%s/plugins", kubeeyeSvc)
 
 		tr := &http.Transport{
 			IdleConnTimeout:    5 * time.Second, // the maximum amount of time an idle connection will remain idle before closing itself.
@@ -61,7 +66,7 @@ func pluginAudit() {
 		}
 		client := &http.Client{Transport: tr}
 
-		_, err = client.Do(req)
+		_, err = client.PostForm(url, *data)
 		if err != nil {
 			log.Printf("Push plugin result to kubeeye failed: %+v", err)
 		}

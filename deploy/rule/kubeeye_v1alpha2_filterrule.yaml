@@ -1,0 +1,11 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  name: inspect-rule-filter-file
+  labels:
+    kubeeye.kubesphere.io/rule-group: kubeeye_workloads_rego
+spec:
+  fileFilter:
+    - name: systemLog
+      path: /var/log/messages
+      rule: error

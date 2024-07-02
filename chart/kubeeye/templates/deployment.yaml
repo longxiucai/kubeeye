@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubeeye.fullname" . }}-apiserver
+  labels:
+    app: kubeeye-apiserver
+  {{- include "kubeeye.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.apiserver.replicas }}
+  selector:
+    matchLabels:
+      app: kubeeye-apiserver
+    {{- include "kubeeye.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: kubeeye-apiserver
+      {{- include "kubeeye.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: GIN_MODE
+          value: {{ quote .Values.apiserver.kubeeyeApiserver.env.ginMode }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.apiserver.kubeeyeApiserver.image.repository }}:{{ .Values.apiserver.kubeeyeApiserver.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.apiserver.kubeeyeApiserver.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 10
+        name: kubeeye-apiserver
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 10
+        resources: {{- toYaml .Values.apiserver.kubeeyeApiserver.resources | nindent 10
+          }}
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+        - mountPath: /kubeeye/data
+          name: inspect-result
+          readOnly: true
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      serviceAccountName: {{ include "kubeeye.fullname" . }}-controller-manager
+      volumes:
+      - hostPath:
+          path: /etc/localtime
+        name: localtime
+      - name: inspect-result
+        persistentVolumeClaim:
+          claimName: {{ include "kubeeye.fullname" . }}-inspect-result
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubeeye.fullname" . }}-controller-manager
+  labels:
+    control-plane: kubeeye-controller-manager
+  {{- include "kubeeye.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.controllerManager.replicas }}
+  selector:
+    matchLabels:
+      control-plane: kubeeye-controller-manager
+    {{- include "kubeeye.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        control-plane: kubeeye-controller-manager
+      {{- include "kubeeye.selectorLabels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+    spec:
+      containers:
+      - args: {{- toYaml .Values.controllerManager.kubeRbacProxy.args | nindent 8 }}
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.controllerManager.kubeRbacProxy.image.repository }}:{{ .Values.controllerManager.kubeRbacProxy.image.tag
+          | default .Chart.AppVersion }}
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        resources: {{- toYaml .Values.controllerManager.kubeRbacProxy.resources | nindent
+          10 }}
+      - args: {{- toYaml .Values.controllerManager.manager.args | nindent 8 }}
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.controllerManager.manager.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources: {{- toYaml .Values.controllerManager.manager.resources | nindent 10
+          }}
+        securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /kubeeye/data
+          name: inspect-result
+        - mountPath: /etc/localtime
+          name: localtime
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      serviceAccountName: {{ include "kubeeye.fullname" . }}-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: inspect-result
+        persistentVolumeClaim:
+          claimName: {{ include "kubeeye.fullname" . }}-inspect-result
+      - hostPath:
+          path: /etc/localtime
+        name: localtime

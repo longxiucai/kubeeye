@@ -1,0 +1,26 @@
+apiVersion: kubeeye.kubesphere.io/v1alpha2
+kind: InspectRule
+metadata:
+  labels:
+    app.kubernetes.io/name: inspectrule
+    app.kubernetes.io/instance: inspectrule-sample
+    app.kubernetes.io/part-of: kubeeye
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kubeeye
+    kubeeye.kubesphere.io/rule-group: kubeeye_workloads_rego
+  name: inspect-rule-command
+  namespace: kubeeye-system
+spec:
+  customCommand:
+    - name: hostname-m
+      command: hostname
+      rule: result regex "m.*\d"
+    - name: kdump-status-running
+      command: systemctl status kdump.service|grep Active
+      rule: result contains "running"
+    - name: os-version
+      command: cat /etc/.productinfo|grep release|grep Lance
+      rule: result regex ".*20230324"
+    - name: err-test
+      command: dddd
+      rule : defec
