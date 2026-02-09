@@ -5,12 +5,12 @@ Kubernetes 集群信息管理页面
 """
 
 # 导入必要的库
+import time
 import streamlit as st
 import pandas as pd
 import sys
 from pathlib import Path
-import json
-from typing import Union
+from typing import Union,List
 
 # 设置页面配置 - 必须是第一个Streamlit命令
 st.set_page_config(
@@ -74,32 +74,122 @@ def format_labels_dict(labels_dict: dict) -> str:
         return ""
     return ",".join([f"{k}={v}" for k, v in labels_dict.items()])
 
-def reset_auth_related_state(node_id: Union[str, int], auth_type: str):  # 替换 str | int 为 Union[str, int]
+def ensure_node_state(node_id: Union[str, int]):
+    """
+    确保一个节点所需的所有 session_state key 都存在
+    只初始化，不做任何业务判断
+    """
+    defaults = {
+        f"node_ip_{node_id}": "",
+        f"node_port_{node_id}": "22",
+        f"node_username_{node_id}": "root",
+        f"node_labels_{node_id}": "",
+        f"auth_type_{node_id}": "password",
+        f"select_auth_type_{node_id}": "password",
+        f"node_password_{node_id}": "",
+        f"node_key_{node_id}": "",
+        f"node_key_content_{node_id}": "",
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+def reset_auth_related_state(node_id: Union[str, int], auth_type: str):
     """
     重置认证方式相关的会话状态，确保切换时无残留
     
     Args:
         node_id: 节点的唯一标识（数字/字符串）
-        auth_type: 目标认证方式（password/key）
+        auth_type: 目标认证方式（password/key_path/key_content）
     """
-    # 定义需要清空的键前缀
+    # 定义需要清空的键
     password_key = f"node_password_{node_id}"
     key_path_key = f"node_key_{node_id}"
+    key_content_key = f"node_key_content_{node_id}"
     
-    # 根据目标认证方式，清空另一种方式的状态
+    # 清空所有非目标认证方式的状态
     if auth_type == "password":
-        if key_path_key in st.session_state:
-            del st.session_state[key_path_key]
-        # 确保密码键存在（初始化为空）
-        if password_key not in st.session_state:
-            st.session_state[password_key] = ""
-    else:
-        if password_key in st.session_state:
-            del st.session_state[password_key]
-        # 确保密钥路径键存在（初始化为空）
-        if key_path_key not in st.session_state:
-            st.session_state[key_path_key] = ""
+        for key in [key_path_key, key_content_key]:
+            if key in st.session_state:
+                del st.session_state[key]
+    elif auth_type == "key_path":
+        for key in [password_key, key_content_key]:
+            if key in st.session_state:
+                del st.session_state[key]
+    elif auth_type == "key_content":
+        for key in [password_key, key_path_key]:
+            if key in st.session_state:
+                del st.session_state[key]
 
+def render_auth_fields(
+    *,
+    node_id: Union[str, int],
+    label_prefix: str = "认证方式"
+):
+    """
+    渲染 SSH 认证方式选择 + 对应输入框
+    仅负责 UI + session_state 同步，不负责校验、不负责提交
+    """
+    auth_type_key = f"auth_type_{node_id}"
+    select_key = f"select_auth_type_{node_id}"
+    password_key = f"node_password_{node_id}"
+    key_path_key = f"node_key_{node_id}"
+    key_content_key = f"node_key_content_{node_id}"
+
+    # 初始化 auth_type
+    ensure_node_state(node_id)  # 统一初始化，无需单独判断
+
+    def on_auth_change():
+        new_auth = st.session_state[select_key]
+        st.session_state[auth_type_key] = new_auth
+        reset_auth_related_state(node_id, new_auth)
+
+    # 认证方式选择
+    auth_type = st.selectbox(
+        label_prefix,
+        ["password", "key_path", "key_content"],
+        key=select_key,
+        index=["password", "key_path", "key_content"].index(st.session_state[auth_type_key]),
+        on_change=on_auth_change
+    )
+    st.session_state[auth_type_key] = auth_type
+
+    # 根据认证方式渲染输入框
+    if auth_type == "password":
+        st.text_input(
+            "密码",
+            type="password",
+            key=password_key,
+            value=st.session_state[password_key]
+        )
+    elif auth_type == "key_path":
+        st.text_input(
+            "私钥路径",
+            placeholder="~/.ssh/id_rsa",
+            key=key_path_key,
+            value=st.session_state[key_path_key]
+        )
+    elif auth_type == "key_content":
+        st.text_area(
+            "私钥内容",
+            placeholder="-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----",
+            height=180,
+            key=key_content_key,
+            value=st.session_state[key_content_key]
+        )
+
+def clear_node_state(node_ids: List[Union[str, int]]):
+    """
+    批量清空节点相关的会话状态（统一清理逻辑）
+    
+    Args:
+        node_ids: 需要清空的节点ID列表
+    """
+    for node_id in node_ids:
+        for suffix in ["ip", "port", "username", "labels", "password", "key", "key_content", "auth_type", "select_auth_type"]:
+            key = f"node_{suffix}_{node_id}"
+            if key in st.session_state:
+                del st.session_state[key]
 
 # 选项卡
 tab1, tab2, tab3 = st.tabs(["集群列表", "添加集群", "编辑集群"])
@@ -167,97 +257,47 @@ with tab2:
     # 初始化节点列表
     if 'add_cluster_nodes' not in st.session_state:
         st.session_state.add_cluster_nodes = [0]  # 至少有一个节点输入框
-    # 为每个节点初始化认证方式状态
-    for node_id in st.session_state.add_cluster_nodes:
-        if f"auth_type_{node_id}" not in st.session_state:
-            st.session_state[f"auth_type_{node_id}"] = "password"  # 默认密码认证
-        reset_auth_related_state(node_id, st.session_state[f"auth_type_{node_id}"])
-        if f"node_labels_{node_id}" not in st.session_state:
-            st.session_state[f"node_labels_{node_id}"] = ""
-    # 集群名称输入（表单外，但值会在表单提交时读取）
+    
     cluster_name = st.text_input("集群名称", placeholder="production")
     st.caption("请输入一个唯一的集群名称，用于标识此集群")
     
     st.subheader("节点信息")
     st.caption("添加集群节点信息，用于对节点进行巡检")
-    
     # 节点输入区域（表单外，实现实时切换）
     nodes_container = st.container()
     with nodes_container:
         for idx, node_id in enumerate(st.session_state.add_cluster_nodes):
+            # 统一初始化节点状态（无需单独调用 reset_auth_related_state）
+            ensure_node_state(node_id)
+            
             with st.container(border=True):
                 st.markdown(f"**节点 {idx + 1}**")
+                node_ip_key = f"node_ip_{node_id}"
+                node_port_key = f"node_port_{node_id}"
+                node_username_key = f"node_username_{node_id}"
+                node_labels_key = f"node_labels_{node_id}"
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    # 节点基础信息（使用会话状态存储值）
-                    node_ip_key = f"node_ip_{node_id}"
-                    node_port_key = f"node_port_{node_id}"
-                    node_username_key = f"node_username_{node_id}"
-                    
-                    # 初始化基础信息的会话状态（避免KeyError）
-                    for key, default in [(node_ip_key, ""), (node_port_key, "22"), (node_username_key, "root")]:
-                        if key not in st.session_state:
-                            st.session_state[key] = default
-                    
                     node_ip = st.text_input(
                         "节点 IP", 
                         placeholder="192.168.1.100",
                         key=node_ip_key,
-                        value=st.session_state[node_ip_key]  # 显式绑定值
+                        value=st.session_state[node_ip_key]
                     )
                     node_port = st.text_input(
                         "SSH 端口", 
                         key=node_port_key,
+                        value=st.session_state[node_port_key]
                     )
                     node_username = st.text_input(
                         "用户名", 
                         key=node_username_key,
+                        value=st.session_state[node_username_key]
                     )
                 
                 with col2:
-                    auth_type_key = f"auth_type_{node_id}"
-                    
-                    def on_auth_change(node_id: int):
-                        """认证方式切换的回调函数"""
-                        new_auth = st.session_state.get(f"select_auth_type_{node_id}", "password")
-                        st.session_state[f"auth_type_{node_id}"] = new_auth
-                        # 重置另一种认证方式的状态
-                        reset_auth_related_state(node_id, new_auth)
-                    
-                    auth_type = st.selectbox(
-                        "认证方式", 
-                        ["password", "key"],
-                        key=f"select_auth_type_{node_id}",
-                        index=0 if st.session_state[auth_type_key] == "password" else 1,
-                        on_change=on_auth_change,  # 切换时触发回调
-                        args=(node_id,)  # 传递当前节点ID
-                    )
-                    
-                    # 实时更新会话状态（兜底，确保状态一致）
-                    st.session_state[auth_type_key] = auth_type
-                    
-                    # 根据当前认证方式显示对应的输入框
-                    current_auth = st.session_state[auth_type_key]
-                    password_key = f"node_password_{node_id}"
-                    key_path_key = f"node_key_{node_id}"
-                    
-                    if current_auth == "password":
-                        node_password = st.text_input(
-                            "密码", 
-                            type="password",
-                            key=password_key,
-                            value=st.session_state[password_key]  # 显式绑定值
-                        )
-                    else:
-                        node_key_path = st.text_input(
-                            "密钥路径", 
-                            placeholder="/home/user/.ssh/id_rsa",
-                            key=key_path_key,
-                            value=st.session_state[key_path_key]  # 显式绑定值
-                        )
-                
-                    node_labels_key = f"node_labels_{node_id}"
+                    render_auth_fields(node_id=node_id)
                     node_labels = st.text_input(
                         "节点标签",
                         placeholder="kubernetes.io/arch=amd64,kubernetes.io/os=linux",
@@ -265,18 +305,14 @@ with tab2:
                         value=st.session_state[node_labels_key],
                         help="输入节点标签，格式：key1=value1,key2=value2"
                     )
-
         
-        # 添加节点按钮（表单外，直接触发重渲染）
-        if st.button("➕ 添加节点", use_container_width=False):
+        # 添加节点按钮（简化参数）
+        if st.button("➕ 添加节点"):
             new_id = max(st.session_state.add_cluster_nodes) + 1 if st.session_state.add_cluster_nodes else 0
             st.session_state.add_cluster_nodes.append(new_id)
-            st.session_state[f"auth_type_{new_id}"] = "password"  # 初始化新节点认证方式
-            reset_auth_related_state(new_id, "password")  # 初始化新节点的认证状态
-            st.session_state[f"node_labels_{new_id}"] = ""  # 新增：初始化新节点标签
+            ensure_node_state(new_id)  # 初始化新节点状态
             st.rerun()
 
-    
     # 表单：仅包含 Prometheus、Kubeconfig 和提交按钮
     with st.form("add_cluster_form"):
         st.subheader("Prometheus 配置")
@@ -313,23 +349,23 @@ with tab2:
                 node_port = st.session_state.get(f"node_port_{node_id}", "22")
                 node_username = st.session_state.get(f"node_username_{node_id}", "root")
                 auth_type = st.session_state.get(f"auth_type_{node_id}", "password")
-                node_labels_str = st.session_state.get(f"node_labels_{node_id}", "")
-                node_labels = parse_labels_string(node_labels_str)
-                
+                node_labels = st.session_state.get(f"node_labels_{node_id}", "")
+
                 node_info = {
                     "ip": node_ip,
                     "port": node_port or "22",
                     "username": node_username or "root",
                     "auth_type": auth_type,
-                    "labels": node_labels
+                    "labels": parse_labels_string(node_labels)
                 }
                 
                 # 根据认证方式添加密码或密钥路径
                 if auth_type == "password":
                     node_info["password"] = st.session_state.get(f"node_password_{node_id}", "")
-                else:
+                elif auth_type == "key_path":
                     node_info["key_path"] = st.session_state.get(f"node_key_{node_id}", "")
-                
+                elif auth_type == "key_content":
+                    node_info["key_content"] = st.session_state.get(f"node_key_content_{node_id}", "")
                 nodes_to_add.append(node_info)
         
         # 验证输入
@@ -410,13 +446,9 @@ with tab2:
             
             if success_count > 0:
                 st.success(f"集群 {cluster_name} 已成功添加")
-                # 重置节点列表和认证方式状态
+                clear_node_state(st.session_state.add_cluster_nodes)
+                # 重置节点列表
                 st.session_state.add_cluster_nodes = [0]
-                st.session_state[f"auth_type_0"] = "password"
-                # 清空所有节点输入框的会话状态
-                for key in list(st.session_state.keys()):
-                    if key.startswith(("node_ip_", "node_port_", "node_username_", "node_password_", "node_key_", "select_auth_type_", "node_labels_")):
-                        del st.session_state[key]
                 st.info("你可以在「编辑集群」选项卡中添加更多节点")
 
 # 编辑集群选项卡
@@ -452,105 +484,45 @@ with tab3:
                     for i, node in enumerate(nodes):
                         with st.expander(f"节点: {node['ip']}", expanded=False):
                             st.json(node)
-                            if st.button("删除节点", key=f"delete_node_{i}"):
+                            if st.button("删除节点", key=f"delete_node_{selected_cluster}_{i}"):  # 加集群名避免键冲突
                                 cluster_config.remove_node(node['ip'])
                                 st.success(f"节点 {node['ip']} 已删除")
                                 st.rerun()
                 
                 # 添加新节点
                 st.write("添加新节点:")
-                # 1. 初始化认证方式（固定使用 "edit_node" 作为节点ID，避免与添加集群的0/1/2冲突）
-                edit_node_id = "edit_node"  # 固定ID，区分添加集群的数字ID
+                edit_node_id = f"edit_node_{selected_cluster}"
+                ensure_node_state(edit_node_id)  # 统一初始化
+
+                node_ip_key = f"node_ip_{edit_node_id}"
+                node_port_key = f"node_port_{edit_node_id}"
+                node_username_key = f"node_username_{edit_node_id}"
                 auth_type_key = f"auth_type_{edit_node_id}"
-                select_auth_key = f"select_auth_type_{edit_node_id}"  # 选择框的键名
                 node_labels_key = f"node_labels_{edit_node_id}"
-                
-                # 2. 初始化认证方式状态（确保键存在）
-                if auth_type_key not in st.session_state:
-                    st.session_state[auth_type_key] = "password"
-                # 3. 初始化选择框状态（关键：与选择框的key完全一致）
-                if select_auth_key not in st.session_state:
-                    st.session_state[select_auth_key] = "password"
-                if node_labels_key not in st.session_state:
-                    st.session_state[node_labels_key] = ""
-                
-                # 4. 初始化密码/密钥的会话状态
-                reset_auth_related_state(edit_node_id, st.session_state[auth_type_key])
-                
-                # 5. 初始化编辑节点的基础信息状态
-                base_keys = [
-                    f"node_ip_{edit_node_id}",
-                    f"node_port_{edit_node_id}",
-                    f"node_username_{edit_node_id}"
-                ]
-                for key in base_keys:
-                    if key not in st.session_state:
-                        st.session_state[key] = "" if "ip" in key else "22" if "port" in key else "root"
-                
+
                 edit_node_container = st.container(border=True)
                 with edit_node_container:
                     col1, col2 = st.columns(2)
                     with col1:
-                        # 节点基础信息（使用固定ID的键名）
-                        ip_key = f"node_ip_{edit_node_id}"
-                        port_key = f"node_port_{edit_node_id}"
-                        username_key = f"node_username_{edit_node_id}"
-                        
                         edit_node_ip = st.text_input(
                             "节点 IP", 
                             placeholder="192.168.1.101",
-                            key=ip_key,
-                            value=st.session_state[ip_key]
+                            key=node_ip_key,
+                            value=st.session_state[node_ip_key]
                         )
                         edit_node_port = st.text_input(
                             "SSH 端口",
-                            key=port_key,
+                            key=node_port_key,
+                            value=st.session_state[node_port_key]
                         )
                         edit_node_username = st.text_input(
                             "用户名",
-                            key=username_key,
+                            key=node_username_key,
+                            value=st.session_state[node_username_key]
                         )
                     
                     with col2:
-                        def on_edit_auth_change():
-                            """编辑页面认证方式切换回调（使用固定ID）"""
-                            # 读取选择框的最新值（键名与selectbox的key一致）
-                            new_auth = st.session_state[select_auth_key]
-                            # 更新认证方式状态
-                            st.session_state[auth_type_key] = new_auth
-                            # 重置残留状态
-                            reset_auth_related_state(edit_node_id, new_auth)
-                        
-                        # 认证方式选择框（键名与初始化的select_auth_key完全一致）
-                        auth_type = st.selectbox(
-                            "认证方式", 
-                            ["password", "key"],
-                            key=select_auth_key,  # 关键：使用初始化的键名
-                            index=0 if st.session_state[auth_type_key] == "password" else 1,
-                            on_change=on_edit_auth_change
-                        )
-                        
-                        # 同步选择框值到认证方式状态
-                        st.session_state[auth_type_key] = auth_type
-                        
-                        # 显示对应的输入框（使用固定ID的键名）
-                        password_key = f"node_password_{edit_node_id}"
-                        key_path_key = f"node_key_{edit_node_id}"
-                        if st.session_state[auth_type_key] == "password":
-                            edit_node_password = st.text_input(
-                                "密码", 
-                                type="password",
-                                key=password_key,
-                                value=st.session_state[password_key]
-                            )
-                        else:
-                            edit_node_key_path = st.text_input(
-                                "密钥路径", 
-                                placeholder="/home/user/.ssh/id_rsa",
-                                key=key_path_key,
-                                value=st.session_state[key_path_key]
-                            )
-                
+                        render_auth_fields(node_id=edit_node_id)
                         edit_node_labels = st.text_input(
                             "节点标签",
                             placeholder="kubernetes.io/arch=amd64,kubernetes.io/os=linux",
@@ -558,66 +530,91 @@ with tab3:
                             value=st.session_state[node_labels_key],
                             help="输入节点标签，格式：key1=value1,key2=value2"
                         )
-                
-                with st.form("add_node_form"):
-                    submitted = st.form_submit_button("添加节点")
-                    
-                    if submitted:
-                        ip = st.session_state[f"node_ip_{edit_node_id}"]
-                        if not ip:
-                            st.error("请输入节点 IP")
+
+                    st.divider()  # 分割线区分输入框和按钮
+                    test_conn_btn = st.button(
+                        "测试连接",
+                        key=f"test_node_conn_{selected_cluster}",
+                    )
+                    add_node_btn = st.button(
+                        "添加节点",
+                        key=f"add_node_btn_{selected_cluster}",
+                    )
+
+                # ========== 测试连接按钮逻辑 ==========
+                if test_conn_btn:
+                    ip = st.session_state[node_ip_key]
+                    if not ip:
+                        st.error("请先输入节点 IP！")
+                    else:
+                        # 构建节点信息（仅用于测试）
+                        node_info = {
+                            "ip": ip,
+                            "port": st.session_state[node_port_key] or "22",
+                            "username": st.session_state[node_username_key] or "root",
+                            "auth_type": st.session_state[auth_type_key],
+                            "labels": parse_labels_string(st.session_state[node_labels_key])
+                        }
+                        
+                        # 添加密码/密钥信息
+                        if node_info["auth_type"] == "password":
+                            node_info["password"] = st.session_state[f"node_password_{edit_node_id}"]
+                        elif node_info["auth_type"] == "key_path":
+                            node_info["key_path"] = st.session_state[f"node_key_{edit_node_id}"]
+                        else :
+                            node_info["key_content"] = st.session_state[f"node_key_content_{edit_node_id}"]
+                        
+                        # 测试节点连接（仅验证，不添加）
+                        with st.spinner("正在测试节点连接..."):
+                            success, message = test_node_connection(node_info)
+                        if success:
+                            st.success(f"✅ 节点 {ip} 连接成功！")
                         else:
-                            # 构建节点信息
-                            node_info = {
-                                "ip": ip,
-                                "port": st.session_state[f"node_port_{edit_node_id}"],
-                                "username": st.session_state[f"node_username_{edit_node_id}"],
-                                "auth_type": st.session_state[auth_type_key],
-                                "labels": parse_labels_string(st.session_state[node_labels_key])
-                            }
-                            
-                            # 添加密码/密钥信息
-                            if node_info["auth_type"] == "password":
-                                node_info["password"] = st.session_state[f"node_password_{edit_node_id}"]
-                            else:
-                                node_info["key_path"] = st.session_state[f"node_key_{edit_node_id}"]
-                            
-                            # 测试节点连接
-                            with st.spinner("正在测试节点连接..."):
-                                success, message = test_node_connection(node_info)
-                            
-                            if not success:
-                                st.error(f"节点连接失败: {message}")
-                            else:
-                                # 添加节点配置
-                                cluster_config.update_node(node_info)
-                                st.success(f"节点 {ip} 已添加")
-                                
-                                # 清空编辑节点的输入状态
-                                reset_keys = [
-                                    f"node_ip_{edit_node_id}",
-                                    f"node_port_{edit_node_id}",
-                                    f"node_username_{edit_node_id}",
-                                    f"node_password_{edit_node_id}",
-                                    f"node_key_{edit_node_id}",
-                                    node_labels_key
-                                ]
-                                for key in reset_keys:
-                                    if key in st.session_state:
-                                        del st.session_state[key]
-                                
-                                # 重置认证方式为默认
-                                reset_auth_related_state(edit_node_id, "password")
-                                st.rerun()
-            
-            # Prometheus 配置选项卡
+                            st.error(f"❌ 节点 {ip} 连接失败：{message}")
+                # ========== 添加节点按钮逻辑 ==========
+                if add_node_btn:
+                    ip = st.session_state[node_ip_key]
+                    if not ip:
+                        st.error("请先输入节点 IP！")
+                    else:
+                        # 构建节点信息
+                        node_info = {
+                            "ip": ip,
+                            "port": st.session_state[node_port_key] or "22",
+                            "username": st.session_state[node_username_key] or "root",
+                            "auth_type": st.session_state[auth_type_key],
+                            "labels": parse_labels_string(st.session_state[node_labels_key])
+                        }
+                        
+                        # 添加密码/密钥信息
+                        if node_info["auth_type"] == "password":
+                            node_info["password"] = st.session_state[f"node_password_{edit_node_id}"]
+                        elif node_info["auth_type"] == "key_path":
+                            node_info["key_path"] = st.session_state[f"node_key_{edit_node_id}"]
+                        else :
+                            node_info["key_content"] = st.session_state[f"node_key_content_{edit_node_id}"]
+                        
+                        # 先测试连接，再添加
+                        with st.spinner("正在测试节点连接..."):
+                            success, message = test_node_connection(node_info)
+                        
+                        if not success:
+                            st.error(f"❌ 节点连接失败，无法添加：{message}")
+                        else:
+                            # 添加节点配置
+                            cluster_config.update_node(node_info)
+                            st.success(f"✅ 节点 {ip} 已成功添加！")
+                            # 清空编辑节点的输入状态
+                            clear_node_state([edit_node_id])
+                            time.sleep(1.5)
+                            st.rerun()
             with edit_tab2:
                 st.subheader("Prometheus 配置")
                 
                 # 获取现有配置
                 prometheus_config = cluster_config.get_prometheus_config()
                 
-                with st.form("edit_prometheus_form"):
+                with st.form(f"edit_prometheus_form_{selected_cluster}"):  # 加集群名避免冲突
                     prometheus_enabled = st.checkbox("启用 Prometheus", value=prometheus_config.get('enabled', False))
                     
                     col1, col2 = st.columns(2)
@@ -678,7 +675,7 @@ with tab3:
                 # 获取现有配置
                 current_kubeconfig = cluster_config.get_kubeconfig()
                 
-                with st.form("edit_kubeconfig_form"):
+                with st.form(f"edit_kubeconfig_form_{selected_cluster}"):  # 加集群名避免冲突
                     kubeconfig_content = st.text_area("Kubeconfig 内容", value=current_kubeconfig, height=300)
                     
                     # 测试连接按钮
