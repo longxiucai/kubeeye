@@ -217,7 +217,7 @@ else:
         passed_count = latest_result.get('passed', 0) if latest_result else 0
         
         cluster_data.append({
-            "集群名称": f"**{cluster_name}**",
+            "集群名称": f"{cluster_name}",
             "状态": status_icons[status],
             "节点数": nodes_count,
             "kubeconfig 有效期": cert_display,
@@ -277,8 +277,8 @@ if all_results:
         
         scan_records.append({
             "时间": time_str,
-            "集群": f"**{result['cluster_name']}**",
-            "类型": result['inspection_type'],
+            "集群": f"{result['cluster_name']}",
+            "类型": "⚡ 立即" if result['inspection_type'] == 'immediate' else ("⏲️ 定时" if result['inspection_type'] == 'scheduled' else "🔬 测试"),
             "状态": status,
             "关键问题": critical,
             "警告": warning,
