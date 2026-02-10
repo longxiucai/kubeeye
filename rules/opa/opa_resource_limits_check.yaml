@@ -126,7 +126,6 @@ config:
       condition: "violation_count == 0"
       severity: warning
       description: "发现 {{ violation_count }} 个资源没有正确配置资源请求/限制"
-      
     - name: "检查是否有大量缺少资源配置的工作负载"
       condition: "violation_count < 10"
       severity: critical

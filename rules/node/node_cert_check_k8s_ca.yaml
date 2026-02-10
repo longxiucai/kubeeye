@@ -1,0 +1,21 @@
+category: cert
+config:
+  assertions:
+  - condition: int(output) > 90
+    description: '证书有效天数: {{ output }}'
+    name: 证书有效期正常
+    severity: warning
+  execution:
+    command: echo $(( ( $(date -d "$(openssl x509 -in /etc/kubernetes/pki/ca.crt -noout
+      -enddate | cut -d= -f2)" +%s) - $(date +%s) ) / 86400 ))
+    timeout: 5
+  scope: {}
+description: 检查k8s集群ca.crt证书有效期
+enabled: true
+id: node_cert_check_k8s_ca
+name: 节点k8s证书ca.crt剩余天数检查
+severity: critical
+solution: ''
+tags: []
+tier: basic
+type: node

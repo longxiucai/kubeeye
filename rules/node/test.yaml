@@ -1,0 +1,22 @@
+category: ''
+config:
+  assertions:
+  - condition: int(output) < 30
+    description: '内存使用率: {{ output }}%'
+    name: 内存使用率正常
+    severity: warning
+  execution:
+    command: free | awk 'NR==2{printf "%.0f", $3*100/$2 }'
+    timeout: 5
+  scope:
+    node_selector:
+      test: '1'
+description: tt
+enabled: true
+id: test
+name: test
+severity: info
+solution: ''
+tags: []
+tier: basic
+type: node
