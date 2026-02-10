@@ -115,6 +115,7 @@ class NodeConnection:
                     return False, "私钥需要 passphrase，但当前未提供"
                 except Exception as e:
                     return False, f"私钥认证失败: {e}"
+            self.connected = True
             return True, ""
         except socket.timeout:
             return False, "连接超时"
