@@ -431,51 +431,65 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
     """
     base_key = f"rule_editor_{rule.type}_{key_suffix}"  # 简化key，保证唯一性
     cfg = {}  # 全新初始化，不依赖rule.config的旧值，纯实时读取
-
-    st.markdown("##### 可编辑的配置 (结构化视图)")
-
+    st.markdown("##### 可编辑的配置")
     # ===== 节点规则 =====
     if rule.type == 'node':
         # 执行配置
         exec_raw = st.text_area(
             "执行配置 (YAML)", 
-            value=yaml.dump(rule.config.get('execution', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('execution', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_execution",
-            height=100
+            height=80
         )
         try:
             cfg['execution'] = yaml.safe_load(exec_raw) if exec_raw.strip() else {}
         except Exception as e:
             st.warning(f"执行配置解析失败，将使用空配置: {e}")
             cfg['execution'] = {}
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_exec_content = """
+                command: free | awk 'NR==2{printf "%.0f", $3*100/$2 }'
+                timeout: 5
+            """
+            st.code(yaml_exec_content, language="yaml", line_numbers=False)
         # 断言配置
         assertions_raw = st.text_area(
             "断言配置 (YAML)", 
-            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_assertions",
-            height=100
+            height=128
         )
         try:
             cfg['assertions'] = yaml.safe_load(assertions_raw) if assertions_raw.strip() else {}
         except Exception as e:
             st.warning(f"断言配置解析失败，将使用空配置: {e}")
             cfg['assertions'] = {}
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_assertions_content = """
+                - condition: int(output) < 80
+                  description: '内存使用率: {{ output }}%'
+                  name: 内存使用率正常
+                  severity: warning
+            """
+            st.code(yaml_assertions_content, language="yaml", line_numbers=False)
         # Scope作用域（核心：实时读取）
         scope_raw = st.text_area(
             "作用域 (scope) (YAML，非必填)", 
-            value=yaml.dump(rule.config.get('scope', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('scope', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_scope",
             height=80,
-            help="格式要求：{node_selector: {标签键: 标签值}}，例如：\nnode_selector:\n  kubernetes.io/os: linux\n  kubernetes.io/arch: amd64"
         )
         try:
             cfg['scope'] = yaml.safe_load(scope_raw) if scope_raw.strip() else {}
         except Exception as e:
             st.warning(f"作用域配置解析失败，将使用空配置: {e}")
             cfg['scope'] = {}
-
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_scope_content = """
+                node_selector:
+                  kubernetes.io/os: linux
+            """
+            st.code(yaml_scope_content, language="yaml", line_numbers=False)
     # ===== Prometheus规则 =====
     elif rule.type == 'prometheus':
         # PromQL查询
@@ -483,41 +497,58 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
             "Prometheus 查询 (PromQL)", 
             value=rule.config.get('query', ''), 
             key=f"{base_key}_query",
-            height=120
+            height=68
         )
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_query_content = """
+                (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+            """
+            st.code(yaml_query_content, language="promql", line_numbers=False)
         # 时间范围
         time_range_raw = st.text_area(
             "时间范围 (time_range) (YAML，非必填)", 
-            value=yaml.dump(rule.config.get('time_range', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('time_range', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_time_range",
-            height=80
+            height=100
         )
         try:
             cfg['time_range'] = yaml.safe_load(time_range_raw) if time_range_raw.strip() else {}
         except Exception as e:
             st.warning(f"时间范围解析失败，将使用空配置: {e}")
             cfg['time_range'] = {}
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_time_range_content = """
+                end: now
+                start: now-10m
+                step: 1m
+            """
+            st.code(yaml_time_range_content, language="yaml", line_numbers=False)
         # 断言配置
         assertions_raw = st.text_area(
             "断言配置 (YAML)", 
-            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_assertions",
-            height=100
+            height=128
         )
         try:
             cfg['assertions'] = yaml.safe_load(assertions_raw) if assertions_raw.strip() else {}
         except Exception as e:
             st.warning(f"断言配置解析失败，将使用空配置: {e}")
             cfg['assertions'] = {}
-
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_assertions_content = """
+                - condition: max_value < 95
+                  description: '节点内存使用率: {{ max_value | round(2) }}%'
+                  name: 节点内存使用率严重告警
+                  severity: critical        
+            """
+            st.code(yaml_assertions_content, language="yaml", line_numbers=False)
     # ===== OPA规则（核心修改：仅保留inline，移除file相关功能）=====
     elif rule.type == 'opa':
         # 资源列表
         resources_raw = st.text_area(
             "资源列表 (resources) (YAML，非必填)", 
-            value=yaml.dump(rule.config.get('resources', []), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('resources', []), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_resources",
             height=80
         )
@@ -526,8 +557,23 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
         except Exception as e:
             st.warning(f"资源列表解析失败，将使用空列表: {e}")
             cfg['resources'] = []
-        
-        # Rego配置（修改：仅保留内联Rego代码，删除file选项）
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_resources_content = """
+                - apiVersion: v1
+                  kind: Pod
+                  namespaced: true
+                - apiVersion: apps/v1
+                  kind: StatefulSet
+                  namespaced: true
+                - apiVersion: apps/v1
+                  kind: DaemonSet
+                  namespaced: true
+                - apiVersion: apps/v1
+                  kind: Deployment
+                  namespaced: true
+            """
+            st.code(yaml_resources_content, language="yaml", line_numbers=False)        
+        # Rego配置
         st.markdown("Rego 配置")
         rego_default = rule.config.get('rego', {})
         # 直接读取inline值，无切换选项
@@ -540,26 +586,113 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
         )
         # 只保存inline字段，无file字段
         cfg['rego'] = {'inline': inline_raw}
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_rego_inline_content = """
+                # 资源限制检查示例
+                package kubernetes
+                # 获取Pod规范
+                get_pod_spec(resource) = spec if {
+                    resource.kind == "Pod"
+                    spec := resource.spec
+                }
+                get_pod_spec(resource) = spec if {
+                    resource.kind != "Pod"
+                    spec := resource.spec.template.spec
+                }
+                # 检查容器是否缺少资源限制
+                missing_resources_containers(containers, field) = missing if {
+                    missing := [container |
+                        container := containers[_]
+                        resources := object.get(container, "resources", {})
+                        not resources[field]
+                    ]
+                }
+                # 定义违规 - 缺少资源请求
+                violations contains result if {
+                    resource := input.resources[_]
+                    spec := get_pod_spec(resource)
+                    containers := array.concat(
+                        default_array(spec.containers),
+                        default_array(spec.initContainers)
+                    )
+                    missing_requests := missing_resources_containers(containers, "requests")
+                    count(missing_requests) > 0
+                    result := {
+                        "kind": resource.kind,
+                        "name": resource.metadata.name,
+                        "namespace": resource.metadata.namespace,
+                        "message": sprintf("%s '%s' in namespace '%s' has %d container(s) without resource requests: %s", [
+                            resource.kind,
+                            resource.metadata.name,
+                            resource.metadata.namespace,
+                            count(missing_requests),
+                            concat(", ", [c.name | c := missing_requests[_]])
+                        ])
+                    }
+                }
+                # 定义违规 - 缺少资源限制
+                violations contains result if {
+                    resource := input.resources[_]
+                    spec := get_pod_spec(resource)
+                    containers := array.concat(
+                        default_array(spec.containers), 
+                        default_array(spec.initContainers)
+                    )
+                    missing_limits := missing_resources_containers(containers, "limits")
+                    count(missing_limits) > 0
+                    result := {
+                        "kind": resource.kind,
+                        "name": resource.metadata.name,
+                        "namespace": resource.metadata.namespace,
+                        "message": sprintf("%s '%s' in namespace '%s' has %d container(s) without resource limits: %s", [
+                            resource.kind,
+                            resource.metadata.name,
+                            resource.metadata.namespace,
+                            count(missing_limits),
+                            concat(", ", [c.name | c := missing_limits[_]])
+                        ])
+                    }
+                }
+                # 辅助函数 - 返回默认空数组
+                default_array(val) = result if {
+                    val != null
+                    result = val
+                }
+                default_array(val) = [] if {
+                    val == null
+                }
+            """
+            st.code(yaml_rego_inline_content, language="rego", line_numbers=False)
         # 断言配置
         assertions_raw = st.text_area(
             "断言配置 (YAML)", 
-            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('assertions', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_assertions",
-            height=100
+            height=128
         )
         try:
             cfg['assertions'] = yaml.safe_load(assertions_raw) if assertions_raw.strip() else {}
         except Exception as e:
             st.warning(f"断言配置解析失败，将使用空配置: {e}")
             cfg['assertions'] = {}
-        
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_assertions_content = """
+                - condition: violation_count == 0
+                  description: 发现 {{ violation_count }} 个资源没有正确配置资源请求/限制
+                  name: 检查是否有缺少资源配置的工作负载
+                  severity: warning
+                - condition: violation_count < 10
+                  description: 发现大量 ({{ violation_count }}) 资源没有正确配置资源请求/限制
+                  name: 检查是否有大量缺少资源配置的工作负载
+                  severity: critical
+            """
+            st.code(yaml_assertions_content, language="yaml", line_numbers=False) 
         # Scope作用域（核心：实时读取）
         scope_raw = st.text_area(
             "作用域 (scope) (YAML，非必填)", 
-            value=yaml.dump(rule.config.get('scope', {}), allow_unicode=True), 
+            value=yaml.dump(rule.config.get('scope', {}), allow_unicode=True).rstrip('\n'), 
             key=f"{base_key}_scope",
-            height=80,
+            height=128,
             help="格式要求：{namespaces: {include: [命名空间1, 命名空间2], exclude: [命名空间3]}}，例如：\nnamespaces:\n  include: [default, kube-system]\n  exclude: [kube-public]"
         )
         try:
@@ -567,7 +700,15 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
         except Exception as e:
             st.warning(f"作用域配置解析失败，将使用空配置: {e}")
             cfg['scope'] = {}
-
+        with st.expander("配置示例（点击展开）", expanded=False):
+            yaml_scope_content = """
+                namespaces:
+                  exclude:
+                    - kube-system
+                    - kube-public
+                  include: []
+            """
+            st.code(yaml_scope_content, language="yaml", line_numbers=False)
     # 直接返回实时配置，无任何缓存中转
     return cfg
 
@@ -798,7 +939,7 @@ def display_create_rule():
         with col1:
             state['id'] = st.text_input(
                 "规则ID *", state['id'], key="create_rule_id", 
-                placeholder="唯一ID，无空格/斜杠，如：node-mem-limit"
+                placeholder="唯一ID，无空格/斜杠，如：node_mem_limit"
             )
             state['name'] = st.text_input(
                 "规则名称 *", state['name'], key="create_rule_name", 
