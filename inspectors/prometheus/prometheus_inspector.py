@@ -152,7 +152,8 @@ class PrometheusInspector(BaseInspector):
                     description=description,
                     severity="info",
                     details="监控指标正常",
-                    solution=""
+                    solution="",
+                    kwargs={'metrics': metrics}
                 )
             else:
                 # 移除"断言失败"前缀，直接使用描述
@@ -164,7 +165,8 @@ class PrometheusInspector(BaseInspector):
                     description=clean_description,
                     severity=assertion_result['severity'],
                     details=f"监控告警触发\n查询: {query}\n结果值: {self._format_simple_metrics(metrics)}",
-                    solution=rule.solution
+                    solution=rule.solution,
+                    kwargs={'metrics': metrics}
                 )
             
             # 添加上下文信息到名称

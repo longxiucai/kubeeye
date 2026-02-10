@@ -233,7 +233,7 @@ else:
     
     # 快速操作按钮
     st.markdown("#### 🚀 快速操作")
-    cols = st.columns(3)
+    cols = st.columns(4)
     
     with cols[0]:
         if st.button("🔍 执行巡检", use_container_width=True, type="primary"):
@@ -246,6 +246,10 @@ else:
     with cols[2]:
         if st.button("⚙️ 管理集群", use_container_width=True):
             st.switch_page("pages/1_cluster_info.py")
+
+    with cols[3]:
+        if st.button("📋 报告分析", use_container_width=True):
+            st.switch_page("pages/4_report_analysis.py")
 
 # 最近巡检记录表格
 st.markdown("### 📈 最近巡检记录")

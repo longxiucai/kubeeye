@@ -128,6 +128,7 @@ def create_sidebar_header(active_page="首页"):
         {"title": "集群信息", "path": "pages/1_cluster_info.py", "label": "集群信息", "icon": "🔗"},
         {"title": "集群巡检", "path": "pages/2_cluster_inspect.py", "label": "集群巡检", "icon": "🔍"},
         {"title": "巡检报告", "path": "pages/3_inspect_report.py", "label": "巡检报告", "icon": "📊"},
+        {"title": "报告分析", "path": "pages/4_report_analysis.py", "label": "报告分析", "icon": "📋"},
     ]
     
     with st.sidebar:
