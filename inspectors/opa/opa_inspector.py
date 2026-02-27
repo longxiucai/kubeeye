@@ -217,12 +217,12 @@ class OpaInspector(BaseInspector):
                 assertions, assertion_vars, mode="simple"
             )
             
+            details = self._format_violations(violations)
             if assertion_result['passed']:
                 description = assertion_result.get('pass_description', f"{rule.name}: 检查通过")
-                return self._pass_result(rule, description, f"检查了 {resource_count} 个资源")
+                return self._pass_result(rule, description, f"检查了 {resource_count} 个资源。details:\n{details}")
             else:
                 description = assertion_result.get('fail_description', f"{rule.name}: 检查失败")
-                details = self._format_violations(violations)
                 return self._fail_result(
                     rule, 
                     description, 

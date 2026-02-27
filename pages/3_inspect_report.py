@@ -638,7 +638,29 @@ def display_items_list(items, is_passed=False, report_id=None, tab_name=None):
                         safe_display_opa_violations_table(item['violations'], show_expander=False, table_key=item_key)
                     else:
                         st.markdown("**详细信息:**")
-                        st.text(details)
+                        detail_lines = [line.strip() for line in details.split('\n') if line.strip()]
+                        table_data = []
+                        for line in detail_lines:
+                            line_content = line[2:] 
+                            parts = line_content.split('|')
+                            # 校验字段数量，确保格式正确（避免解析出错） 
+                            # - StatefulSet/alertmanager-main (命名空间: monitoring): |alertmanager|monitoring|registry.kylincloud.org:4001/kcc/kcc/prometheus-alertmanager:v0.24.0\n
+                            if len(parts) == 4:
+                                resource = parts[0].strip().rstrip(':')
+                                container_name = parts[1]
+                                image_address = parts[3]
+                                # 组装表格数据
+                                table_data.append({
+                                    "资源": resource,
+                                    "容器名称": container_name,
+                                    "镜像地址": image_address
+                                })
+                        if table_data:
+                            df = pd.DataFrame(table_data)
+                            df = df[["资源", "容器名称", "镜像地址"]]
+                            st.dataframe(df, use_container_width=True)
+                        else:
+                            st.text(details)
             with col2:
                 status = item.get('status', 'unknown')
                 severity = item.get('severity', 'info')
