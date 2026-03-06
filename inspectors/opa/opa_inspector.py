@@ -77,7 +77,7 @@ class OpaInspector(BaseInspector):
             # 获取集群资源
             resources = self._get_cluster_resources(rule)
             if not resources:
-                return self._pass_result(rule, "无匹配资源")
+                return self._pass_result(rule, "无匹配资源", violations=[])
             
             # 执行OPA评估
             violations = self._evaluate_opa(rego_content, resources)
@@ -220,7 +220,7 @@ class OpaInspector(BaseInspector):
             details = self._format_violations(violations)
             if assertion_result['passed']:
                 description = assertion_result.get('pass_description', f"{rule.name}: 检查通过")
-                return self._pass_result(rule, description, f"检查了 {resource_count} 个资源。details:\n{details}")
+                return self._pass_result(rule, description, f"检查了 {resource_count} 个资源。", violations)
             else:
                 description = assertion_result.get('fail_description', f"{rule.name}: 检查失败")
                 return self._fail_result(
@@ -265,9 +265,9 @@ class OpaInspector(BaseInspector):
         
         return "\n".join(details)
     
-    def _pass_result(self, rule: Rule, description: str, details: str = "") -> Dict:
+    def _pass_result(self, rule: Rule, description: str, details: str = "", violations: List[Dict] = None) -> Dict:
         """生成通过结果（已委托给 ResultFormatter）"""
-        return self.rule_processor.result_formatter.pass_result(rule, description, details)
+        return self.rule_processor.result_formatter.pass_result(rule, description, details, violations)
     
     def _fail_result(self, rule: Rule, description: str, details: str, 
                      severity: str = "warning", violations: List[Dict] = None) -> Dict:

@@ -62,7 +62,7 @@ class ResultFormatter:
         return result
     
     @staticmethod
-    def pass_result(rule: Rule, description: str, details: str = "", **kwargs) -> Dict:
+    def pass_result(rule: Rule, description: str, details: str = "", violations: List[Dict] = None, **kwargs) -> Dict:
         """
         生成通过结果
         
@@ -82,6 +82,7 @@ class ResultFormatter:
             severity="info",
             details=details,
             solution="",
+            violations=violations or [],
             **kwargs
         )
     
