@@ -151,7 +151,7 @@ class PrometheusInspector(BaseInspector):
                     status="passed",
                     description=description,
                     severity="info",
-                    details=f"监控指标正常\n结果值: {self._format_simple_metrics(metrics)}",
+                    details="监控指标正常",
                     solution="",
                     kwargs={'metrics': metrics}
                 )
@@ -314,10 +314,7 @@ class PrometheusInspector(BaseInspector):
             values = [m.get('value', 0) for m in metrics]
             max_val = max(values)
             avg_val = sum(values) / len(values)
-            details = []
-            for i, m in enumerate(metrics):
-                details.append(str(f"- {m.get('metric', {})}: {m.get('value', 'N/A'):.2f}\n"))
-            return f"最大值: {max_val:.2f}, 平均值: {avg_val:.2f}, 共{len(metrics)}个实例：\n" + "".join(details)
+            return f"最大值: {max_val:.2f}, 平均值: {avg_val:.2f}, 共{len(metrics)}个实例"
     
     def get_rule_config(self, rule: Rule, key: str, default: Any = None) -> Any:
         """

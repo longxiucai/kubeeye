@@ -623,44 +623,64 @@ def display_items_list(items, is_passed=False, report_id=None, tab_name=None):
         title = f"{item.get('name', '未知检查项')}"
         expanded = not is_passed and item.get('severity') == 'critical'
         with st.expander(title, expanded=expanded):
-            col1, col2 = st.columns([3, 1])
+            col1, col2 = st.columns([4, 1])
             with col1:
                 st.markdown(f"**描述:** {item.get('description', '无')}")
                 details = item.get('details', '')
                 if details:
-                    if 'violations' in item and isinstance(item['violations'], list):
-                        st.markdown("**违规资源:**")
+                    ## opa结果展示
+                    if 'violations' in item and isinstance(item['violations'], list) :
+                        if not is_passed:  
+                            st.markdown("**违规资源:**")
+                        else:
+                            st.markdown("**详细信息:**")
                         import hashlib
                         # 用 name, description, report_id, tab_name, idx 生成稳定唯一的key
                         # 加入description确保即使name相同也能区分
                         base = f"{item.get('name','')}_{item.get('description','')[:50]}_{report_id or ''}_{tab_name or ''}_{idx}"
                         item_key = hashlib.md5(base.encode()).hexdigest()[:12]
                         safe_display_opa_violations_table(item['violations'], show_expander=False, table_key=item_key)
-                    else:
-                        st.markdown("**详细信息:**")
-                        detail_lines = [line.strip() for line in details.split('\n') if line.strip()]
-                        table_data = []
-                        for line in detail_lines:
-                            line_content = line[2:] 
-                            parts = line_content.split('|')
-                            # 校验字段数量，确保格式正确（避免解析出错） 
-                            # - StatefulSet/alertmanager-main (命名空间: monitoring): |alertmanager|monitoring|registry.kylincloud.org:4001/kcc/kcc/prometheus-alertmanager:v0.24.0\n
-                            if len(parts) == 4:
-                                resource = parts[0].strip().rstrip(':')
-                                container_name = parts[1]
-                                image_address = parts[3]
-                                # 组装表格数据
-                                table_data.append({
-                                    "资源": resource,
-                                    "容器名称": container_name,
-                                    "镜像地址": image_address
-                                })
-                        if table_data:
-                            df = pd.DataFrame(table_data)
-                            df = df[["资源", "容器名称", "镜像地址"]]
-                            st.dataframe(df, use_container_width=True)
+                    ## node结果展示
+                    elif 'variables' in item:
+                        st.text(details)
+                        st.markdown("**命令输出**")
+                        if 'output' in item['variables']:
+                            st.text(item['variables']['output'])
                         else:
-                            st.text(details)
+                            st.text(item['variables'])
+                    ## prom结果展示
+                    elif 'kwargs' in item and 'metrics' in item['kwargs']:
+                        st.text(details)
+                        metrics = item['kwargs'].get('metrics', [])
+                        if metrics:
+                            table_data = []
+                            for m in metrics:
+                                metric = m.get('metric', {})
+                                metric_value = m.get('value', 'N/A')
+                                try:
+                                    if isinstance(metric_value, (list, tuple)) and len(metric_value) >= 2:
+                                        metric_value = f"{float(metric_value[1]):.2f}"
+                                    else:
+                                        metric_value = f"{float(metric_value):.2f}"
+                                except (ValueError, TypeError):
+                                    metric_value = "N/A"
+                                table_data.append({
+                                    "指标": metric,
+                                    "指标值": metric_value
+                                })
+                        df = pd.DataFrame(table_data)
+                        st.markdown("**指标结果**")
+                        st.dataframe(
+                            df,
+                            use_container_width=True,
+                            hide_index=True,  # 隐藏行索引，更整洁
+                            column_config={  # 可选：自定义列宽度/名称
+                                "指标": st.column_config.TextColumn("指标", width="large"),
+                                "指标值": st.column_config.TextColumn("指标值", width="small")
+                            }
+                        )
+                    else:
+                        st.text(details)
             with col2:
                 status = item.get('status', 'unknown')
                 severity = item.get('severity', 'info')

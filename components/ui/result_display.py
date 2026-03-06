@@ -119,12 +119,9 @@ def display_opa_violations_table(violations_data: List[Dict], show_expander: boo
         'kind': '资源类型',
         'name': '资源名称', 
         'namespace': '命名空间',
-        'message': '违规详情'
+        'message': '详情'
     }
     df = df.rename(columns=column_mapping)
-    
-    # 显示表格标题
-    st.markdown("**违规资源列表:**")
     
     # 检查违规数量，决定显示方式
     if len(violations_data) <= 10:
@@ -146,8 +143,8 @@ def display_opa_violations_table(violations_data: List[Dict], show_expander: boo
                     "命名空间", 
                     help="Kubernetes命名空间"
                 ),
-                "违规详情": st.column_config.TextColumn(
-                    "违规详情", 
+                "详情": st.column_config.TextColumn(
+                    "详情", 
                     help="具体的违规信息和描述"
                 )
             },
@@ -156,7 +153,7 @@ def display_opa_violations_table(violations_data: List[Dict], show_expander: boo
         )
     else:
         # 大量违规，使用分页或展开式显示
-        st.info(f"发现 {len(violations_data)} 个违规资源，采用分页显示")
+        st.info(f"发现 {len(violations_data)} 个资源，采用分页显示")
         
         # 分页显示
         page_size = 10
@@ -219,7 +216,7 @@ def display_opa_violations_table(violations_data: List[Dict], show_expander: boo
         )
         
         # 显示页面信息
-        st.caption(f"显示第 {start_idx + 1}-{end_idx} 项，共 {len(violations_data)} 项违规")
+        st.caption(f"显示第 {start_idx + 1}-{end_idx} 项，共 {len(violations_data)} 项")
     
     # 根据参数决定是否显示详细视图选项
     if show_expander and len(violations_data) > 0:
