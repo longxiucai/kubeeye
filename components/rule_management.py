@@ -3,15 +3,11 @@
 """
 现代化规则管理组件 - 支持GitOps模式
 """
+import time
 import streamlit as st
 import yaml
 import json
-import pandas as pd
 import git
-import os
-import sys
-import requests
-import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
@@ -19,9 +15,59 @@ from utils.rule_loader import load_rules, save_rule, Rule, RULES_DIR
 from utils.cluster_config import list_clusters, get_cluster
 from components.ui.inspection_engine import execute_inspection_unified
 
-@st.cache_data(ttl=300, show_spinner=False)
-def cached_load_rules(rule_type: Optional[str] = None, include_disabled: bool = False):
+def _rules_signature(rule_type: Optional[str] = None) -> Tuple[Tuple[str, int, int], ...]:
+    """
+    生成规则文件签名，用于缓存失效：
+    - 规则 YAML 文件新增/删除/修改（mtime/size变化）会导致签名变化
+    - 支持 rule_type=None，此时遍历所有规则类型（node/prometheus/opa）
+    """
+    root_dir = Path(__file__).resolve().parents[1]
+    rules_root = root_dir / "rules"
+    sig: List[Tuple[str, int, int]] = []
+
+    # 处理 rule_type=None 的情况：遍历所有规则类型
+    if rule_type is None:
+        rule_types = ["node", "prometheus", "opa"]
+        for rt in rule_types:
+            rules_dir = rules_root / rt
+            if rules_dir.exists():
+                for p in sorted(rules_dir.glob("*.yaml")):
+                    try:
+                        stat = p.stat()
+                        sig.append((str(p), int(stat.st_mtime_ns), int(stat.st_size)))
+                    except OSError:
+                        continue
+    # 处理指定 rule_type 的情况
+    else:
+        rules_dir = rules_root / rule_type
+        if rules_dir.exists():
+            for p in sorted(rules_dir.glob("*.yaml")):
+                try:
+                    stat = p.stat()
+                    sig.append((str(p), int(stat.st_mtime_ns), int(stat.st_size)))
+                except OSError:
+                    continue
+
+    return tuple(sig)
+
+@st.cache_resource(show_spinner=False)
+def cached_load_rules(rule_type: Optional[str] = None, include_disabled: bool = False, signature: Tuple[Tuple[str, int, int], ...] = None) -> List[Rule]:
+    """
+    缓存已启用规则的解析结果。signature 参与缓存 key，文件变化自动失效。
+    """
     return load_rules(rule_type, include_disabled)
+
+@st.cache_resource(show_spinner=False)
+def cached_load_rules_sorted(
+    rule_type: Optional[str] = None, 
+    include_disabled: bool = False, 
+    signature: Tuple[Tuple[str, int, int], ...] = None
+) -> List[Rule]:
+    """
+    缓存按ID小写排序后的规则列表（复用原始缓存，性能最优）
+    """
+    raw_rules = cached_load_rules(rule_type, include_disabled, signature)
+    return sorted(raw_rules, key=lambda x: x.id.lower())
 
 # GitOps配置
 GITOPS_CONFIG_FILE = Path(__file__).parent.parent / "data" / "gitops_config.json"
@@ -813,7 +859,7 @@ def create_rule_view( rule_type: str, key_suffix: str = "", rules: Optional[List
     返回: None（直接在 Streamlit 页面上渲染）
     """
     if rules is None:
-        rules = load_rules(rule_type, include_disabled=True)
+        rules = cached_load_rules_sorted(rule_type, include_disabled=True, signature=_rules_signature(rule_type))
     if not rules:
         st.info(f"没有找到任何 {rule_type} 规则。")
         return
@@ -1105,6 +1151,8 @@ def display_create_rule():
                             'desc': '', 'solution': '', 'tags': ''
                         }
                         cached_load_rules.clear()
+                        time.sleep(1.5)
+                        st.rerun()
                 except Exception as e:
                     st.error(f"❌ 规则保存失败: {str(e)}")
                  
@@ -1116,7 +1164,8 @@ def display_edit_rule():
         key="edit_rule_type_filter"
     )
     # 加载规则
-    rules = load_rules(None if sel_type == "全部" else sel_type, include_disabled=True)
+    load_type = None if sel_type == "全部" else sel_type
+    rules = cached_load_rules_sorted(load_type, include_disabled=True, signature=_rules_signature(load_type))
     if not rules:
         st.info("📭 暂无可用规则，请先在「创建规则」中添加")
         return
@@ -1287,6 +1336,8 @@ def display_edit_rule():
                     if save_rule(updated_rule):
                         st.success(f"✅ 规则「{rule_name}」修改保存成功！")
                         cached_load_rules.clear()
+                        time.sleep(1.5)
+                        st.rerun()
                 except Exception as e:
                     st.error(f"❌ 规则修改保存失败: {str(e)}")
 
@@ -1324,7 +1375,7 @@ def render_local_rule_list():
         )
 
     with col3:
-        all_rules_for_sev = cached_load_rules(None, include_disabled=True)
+        all_rules_for_sev = cached_load_rules(None, include_disabled=True, signature=_rules_signature(None))
         sev_set = []
         for r in all_rules_for_sev:
             sev = getattr(r, 'severity', None)
@@ -1341,7 +1392,7 @@ def render_local_rule_list():
     
     # 加载并筛选规则
     rule_type_filter = None if selected_type == "全部" else selected_type
-    all_rules = cached_load_rules(rule_type_filter, include_disabled=True)
+    all_rules = cached_load_rules_sorted(rule_type_filter, include_disabled=True, signature=_rules_signature(rule_type_filter))
     
     if status_filter == "启用":
         all_rules = [r for r in all_rules if r.enabled]
@@ -1406,7 +1457,7 @@ def render_mode_selector(gitops_manager: GitOpsRuleManager, config: Dict):
     
     with col2:
         # 显示当前统计
-        local_rules_count = sum(len(cached_load_rules(rt)) for rt in ["node", "prometheus", "opa"])
+        local_rules_count = sum(len(cached_load_rules(rt, signature=_rules_signature(rt))) for rt in ["node", "prometheus", "opa"])
         st.metric("本地规则", local_rules_count)
     
     with col3:
@@ -1429,7 +1480,7 @@ def render_local_mode(gitops_manager: GitOpsRuleManager):
 
 def render_gitops_mode(gitops_manager: GitOpsRuleManager, config: Dict):
     """渲染GitOps模式界面"""
-    st.markdown("#### 🔄 GitOps规则管理")
+    st.markdown("#### 🔄 GitOps规则管理（待完善）")
     
     # 选项卡
     tab_manage, tab_browse = st.tabs(["📚 仓库管理", "🔍 规则浏览"])
@@ -1548,7 +1599,7 @@ def sync_repository(gitops_manager: GitOpsRuleManager, repo: Dict):
         else:
             st.error(message)
         
-        st.rerun()
+        # st.rerun()
 
 def render_rule_management_tab():
     """渲染规则管理主标签页"""
