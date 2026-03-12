@@ -360,6 +360,8 @@ def delete_test_result_file(message: str):
                 p = Path(result_path)
                 if p.exists():
                     p.unlink()
+                    import logging
+                    logging.getLogger(__name__).info(f"成功删除临时巡检结果文件: {result_path}")
             except Exception as e:
                 st.error(f"删除测试结果文件时发生错误: {e}")
     except Exception as e:
