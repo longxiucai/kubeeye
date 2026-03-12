@@ -63,8 +63,35 @@ def get_color_by_line_key(line_key: str) -> str:
 
 def display_node_metrics(node_df: pd.DataFrame, selected_cluster: str):
     """展示Node指标"""
-    node_numeric_df = node_df[node_df['value_type'] == 'numeric']
-    node_categorical_df = node_df[node_df['value_type'] == 'categorical']
+    all_rules = sorted(node_df['rule_id'].unique())
+
+    multiselect_key = "node_rule_select"
+
+    # 初始化默认值（避免每次rerun覆盖用户选择）
+    if multiselect_key not in st.session_state:
+        st.session_state[multiselect_key] = []
+
+    multiselect_, select_btn = st.columns([0.95, 0.05])
+
+    with select_btn:
+        st.markdown("<div style='height: 27px'></div>", unsafe_allow_html=True)
+        if st.button("全选", key="node_all_btn", type="secondary"):
+            st.session_state[multiselect_key] = all_rules.copy()
+    with multiselect_:
+        selected_rules = st.multiselect(
+            label=f"选择要展示的 Node 指标（不选则不显示）共 {len(all_rules)} 个指标",
+            options=all_rules,
+            key=multiselect_key
+        )
+
+    if not selected_rules:
+        st.info("请选择要查看的 Node 指标")
+        return
+
+    node_df_selected = node_df[node_df['rule_id'].isin(selected_rules)]
+
+    node_numeric_df = node_df_selected[node_df_selected['value_type'] == 'numeric']
+    node_categorical_df = node_df_selected[node_df_selected['value_type'] == 'categorical']
     node_numeric_groups = sorted(node_numeric_df['rule_id'].unique())
     node_categorical_groups = sorted(node_categorical_df['rule_id'].unique())
     total_rows = len(node_numeric_groups) + len(node_categorical_groups)
