@@ -296,7 +296,7 @@ class NodeInspector(BaseInspector):
         node_name = node.get('name', node['ip'])
         
         # 执行命令
-        output, error = self._execute_command(command, node)
+        output, error = self._execute_command_with_retry(command, node, 2, 2)
         
         if error:
             # 命令执行错误
@@ -389,6 +389,132 @@ class NodeInspector(BaseInspector):
         
         return result
 
+    def _execute_command_with_retry(self, command: str, node: Dict, retry_times: int = 2, retry_interval: int = 2) -> Tuple[str, str]:
+        """
+        在节点上执行命令（包含安全审计）
+        
+        Args:
+            command: 要执行的命令
+            node: 节点信息（包含ip/port/username/name/auth_type/password/key_path等）
+            
+        Returns:
+            命令输出和错误信息的元组 (stdout, error_msg)
+        """
+        try:
+            # 获取节点基本信息（添加默认值，避免KeyError）
+            ip = node.get('ip', 'unknown')
+            port = node.get('port', 22)
+            username = node.get('username', 'unknown')
+            node_name = node.get('name', ip)
+            
+            # 执行前的最后安全检查（双重保护）
+            if self.enable_security_check:
+                is_safe, risk_level, risk_desc = self.security_checker.check_command_security(command)
+                if not is_safe:
+                    error_msg = f"执行前安全检查失败: {risk_desc}"
+                    logger.error(f"节点 {node_name} 命令被阻止: {error_msg}")
+                    # 记录安全审计日志
+                    self._log_security_audit(node_name, ip, username, command, "BLOCKED", risk_desc)
+                    return "", error_msg
+                elif risk_level != 'low':
+                    # 记录风险命令审计
+                    self._log_security_audit(node_name, ip, username, command, "RISKY", risk_desc)
+            
+            logger.info(f"正在连接节点 {node_name} ({ip}:{port}) 用户: {username}")
+
+            # 验证节点配置完整性
+            auth_type = node.get('auth_type', 'password')
+            if auth_type == 'password' and not node.get('password'):
+                error_msg = f"节点 {node_name} 配置错误: 使用密码认证但未提供密码"
+                logger.error(error_msg)
+                self._log_security_audit(node_name, ip, username, command, "CONFIG_ERROR", error_msg)  # 补充审计日志
+                return "", error_msg
+            elif auth_type == 'key' and not node.get('key_path'):
+                error_msg = f"节点 {node_name} 配置错误: 使用密钥认证但未提供密钥路径"
+                logger.error(error_msg)
+                self._log_security_audit(node_name, ip, username, command, "CONFIG_ERROR", error_msg)  # 补充审计日志
+                return "", error_msg
+            
+            # 简化命令显示（如果命令太长）
+            display_command = command[:100] + "..." if len(command) > 100 else command
+            logger.info(f"在节点 {node_name} 上执行命令: {display_command}")
+            
+            # 记录命令执行审计（执行前）
+            self._log_security_audit(node_name, ip, username, command, "EXECUTE", "开始执行命令")
+                
+            # 使用SSH执行命令（带重试逻辑）
+            retry_count = 0
+            while retry_count < retry_times:
+                try:  # 内层try捕获单次连接/执行的异常
+                    with NodeConnection(node) as conn:
+                        if not conn.connected:
+                            retry_count += 1
+                            error_msg = f"无法连接到节点 {node_name} ({ip}): SSH连接失败(重试 {retry_count}/{retry_times})"
+                            logger.error(error_msg)
+                            
+                            # 最后一次重试失败才记录审计日志
+                            if retry_count == retry_times:
+                                self._log_security_audit(node_name, ip, username, command, "CONN_FAILED", error_msg)
+                                return "", error_msg
+                            
+                            # 非最后一次重试，等待后继续
+                            logger.info(f"等待 {retry_interval} 秒后重试连接...")
+                            time.sleep(retry_interval)
+                            continue
+                        
+                        # 连接成功，执行命令
+                        success, stdout, stderr = conn.execute_command(command)
+                        if success:
+                            logger.info(f"命令在节点 {node_name} 上执行成功，输出长度: {len(stdout)}")
+                            self._log_security_audit(node_name, ip, username, command, "SUCCESS", f"输出长度: {len(stdout)}")
+                            return stdout, ""
+                        else:
+                            error_msg = f"命令执行失败: {stderr}"
+                            logger.error(f"节点 {node_name}: {error_msg}")
+                            self._log_security_audit(node_name, ip, username, command, "FAILED", error_msg)
+                            return "", error_msg
+                except Exception as inner_e:
+                    # 捕获单次连接/执行中的异常，计入重试
+                    retry_count += 1
+                    error_msg = f"节点 {node_name} 执行命令异常(重试 {retry_count}/{MAX_RETRY_TIMES}): {str(inner_e)}"
+                    logger.error(error_msg)
+                    
+                    if retry_count == MAX_RETRY_TIMES:
+                        self._log_security_audit(node_name, ip, username, command, "CONN_FAILED", error_msg)
+                        return "", error_msg
+                    
+                    logger.info(f"等待 {RETRY_INTERVAL} 秒后重试...")
+                    time.sleep(RETRY_INTERVAL)
+                    continue
+            
+            # 理论上不会走到这里，兜底处理
+            final_error = f"节点 {node_name} ({ip}) SSH连接/执行重试{MAX_RETRY_TIMES}次均失败"
+            logger.error(final_error)
+            self._log_security_audit(node_name, ip, username, command, "CONN_FAILED", final_error)
+            return "", final_error
+            
+        except ConnectionError as e:
+            error_msg = f"网络连接错误: {str(e)}"
+            node_name_fallback = node.get('name', node.get('ip', 'unknown'))
+            logger.error(f"连接节点 {node_name_fallback} 失败: {error_msg}")
+            self._log_security_audit(node_name_fallback, node.get('ip', 'unknown'), 
+                                   node.get('username', 'unknown'), command, "CONN_ERROR", error_msg)
+            return "", error_msg
+        except TimeoutError as e:
+            error_msg = f"连接超时: {str(e)}"
+            node_name_fallback = node.get('name', node.get('ip', 'unknown'))
+            logger.error(f"连接节点 {node_name_fallback} 超时: {error_msg}")
+            self._log_security_audit(node_name_fallback, node.get('ip', 'unknown'), 
+                                   node.get('username', 'unknown'), command, "TIMEOUT", error_msg)
+            return "", error_msg
+        except Exception as e:
+            error_msg = f"执行命令时发生意外错误: {str(e)}"
+            node_name_fallback = node.get('name', node.get('ip', 'unknown'))
+            logger.error(f"节点 {node_name_fallback}: {error_msg}", exc_info=True)
+            self._log_security_audit(node_name_fallback, node.get('ip', 'unknown'), 
+                                   node.get('username', 'unknown'), command, "UNKNOWN_ERROR", error_msg)
+            return "", error_msg
+            
     def _execute_command(self, command: str, node: Dict) -> Tuple[str, str]:
         """
         在节点上执行命令（包含安全审计）

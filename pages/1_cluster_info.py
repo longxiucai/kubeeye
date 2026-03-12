@@ -27,7 +27,7 @@ if str(ROOT_DIR) not in sys.path:
 # 导入应用模块
 from utils.common import initialize_page
 from utils.cluster_config import list_clusters, get_cluster, delete_cluster
-from utils.node_connection import test_node_connection
+from utils.node_connection import test_node_connection_with_retry
 from utils.prometheus_client import PrometheusClient
 from utils.k8s_client import K8sClient
 
@@ -389,7 +389,7 @@ with tab2:
                 progress_bar.progress((i + 1) / len(nodes_to_add))
                 
                 # 测试节点连接
-                success, message = test_node_connection(node_info)
+                success, message = test_node_connection_with_retry(node_info)
                 
                 if success:
                     success_count += 1
@@ -562,7 +562,7 @@ with tab3:
                         
                         # 测试节点连接（仅验证，不添加）
                         with st.spinner("正在测试节点连接..."):
-                            success, message = test_node_connection(node_info)
+                            success, message = test_node_connection_with_retry(node_info)
                         if success:
                             st.success(f"✅ 节点 {ip} 连接成功！")
                         else:
@@ -592,7 +592,7 @@ with tab3:
                         
                         # 先测试连接，再添加
                         with st.spinner("正在测试节点连接..."):
-                            success, message = test_node_connection(node_info)
+                            success, message = test_node_connection_with_retry(node_info)
                         
                         if not success:
                             st.error(f"❌ 节点连接失败，无法添加：{message}")

@@ -186,3 +186,27 @@ def test_node_connection(node_info: Dict) -> Tuple[bool, str]:
     if success:
         conn.close()
     return success, message
+
+def test_node_connection_with_retry(node_info: Dict, retry_times: int = 2, retry_interval: int = 2) -> Tuple[bool, str]:
+    """
+    测试节点连接
+    
+    Args:
+        node_info: 节点配置信息
+        
+    Returns:
+        (success, message) 元组
+    """
+    retry_count = 0
+    while retry_count < retry_times:
+        conn = NodeConnection(node_info)
+        success, message = conn.connect()
+        if success:
+            conn.close()
+            return success, message
+        retry_count += 1
+        if retry_count == retry_times:
+            return success, f"重试{retry_times}次均失败: {message}"
+
+        import time
+        time.sleep(retry_interval)
