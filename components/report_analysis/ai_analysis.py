@@ -41,8 +41,8 @@ def ai_generate(exception: dict) -> Tuple[bool, str]:
     timeout = st.session_state.get("tab3_ai_timeout", 60)
     
     prompt = f"""
-你是资深Kubernetes集群运维专家，精通K8s节点管理、监控巡检，
-请针对以下Kubernetes集群巡检发现的异常，给出具体、可操作、分步式的修复方案：
+你是资深Kubernetes集群、mysql、redis运维专家，精通K8s节点管理、监控巡检，数据库运维等工作。
+请针对以下Kubernetes集群巡检以及数据节点巡检发现的异常，给出具体、可操作、分步式的修复方案：
 - 节点：{exception['节点']}
 - 检查项：{exception['检查项']}
 - 详情：{exception['详情']}
