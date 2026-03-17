@@ -389,10 +389,11 @@ with tab2:
                 progress_bar.progress((i + 1) / len(nodes_to_add))
                 
                 # 测试节点连接
-                success, message = test_node_connection_with_retry(node_info)
+                success, hostname, message = test_node_connection_with_retry(node_info)
                 
                 if success:
                     success_count += 1
+                    node_info['name'] = hostname
                 else:
                     fail_count += 1
                     failed_nodes.append({
@@ -562,7 +563,7 @@ with tab3:
                         
                         # 测试节点连接（仅验证，不添加）
                         with st.spinner("正在测试节点连接..."):
-                            success, message = test_node_connection_with_retry(node_info)
+                            success, hostname, message = test_node_connection_with_retry(node_info)
                         if success:
                             st.success(f"✅ 节点 {ip} 连接成功！")
                         else:
@@ -592,8 +593,8 @@ with tab3:
                         
                         # 先测试连接，再添加
                         with st.spinner("正在测试节点连接..."):
-                            success, message = test_node_connection_with_retry(node_info)
-                        
+                            success, hostname, message = test_node_connection_with_retry(node_info)
+                            node_info['name'] = hostname
                         if not success:
                             st.error(f"❌ 节点连接失败，无法添加：{message}")
                         else:

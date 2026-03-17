@@ -187,26 +187,39 @@ def test_node_connection(node_info: Dict) -> Tuple[bool, str]:
         conn.close()
     return success, message
 
-def test_node_connection_with_retry(node_info: Dict, retry_times: int = 2, retry_interval: int = 2) -> Tuple[bool, str]:
+def test_node_connection_with_retry(node_info: Dict, retry_times: int = 2, retry_interval: int = 2
+    ) ->  Tuple[bool, Optional[str], Optional[str]]:
     """
     测试节点连接
     
     Args:
         node_info: 节点配置信息
-        
+        retry_times: 重试次数
+        retry_interval: 重试间隔（秒）
+
     Returns:
-        (success, message) 元组
+        (success, hostname, error)
+
+        success=True  -> hostname 有值
+        success=False -> error 有值
     """
     retry_count = 0
+    hostname = "unknown"
     while retry_count < retry_times:
         conn = NodeConnection(node_info)
         success, message = conn.connect()
         if success:
+            exec_success, stdout, stderr = conn.execute_command("hostname")
+            if exec_success:
+                hostname = stdout.strip()
+            else:
+                message = f"连接成功，获取hostname失败: {stderr}"
             conn.close()
-            return success, message
+            return True, hostname, message
         retry_count += 1
         if retry_count == retry_times:
             return success, f"重试{retry_times}次均失败: {message}"
 
         import time
         time.sleep(retry_interval)
+    return False, None, "未知错误"
