@@ -950,11 +950,11 @@ def create_rule_view_tabs(
         return
     # 为避免与页面顶部的“规则类型”选择重复，这里采用按类型分组的方式渲染列表（而不是再次创建选项卡）
     for cfg in available_configs:
-        st.markdown(f"#### {cfg['tab_label']}")
         # 如果调用方传入了按类型分组的 rules_by_type，则使用之（以支持筛选后的显示）
         provided_rules = None
         if rules_by_type and cfg['type'] in rules_by_type:
             provided_rules = rules_by_type[cfg['type']]
+        st.markdown(f"#### {cfg['tab_label']} ({len(provided_rules) if provided_rules is not None else '加载中...'})")
         create_rule_view(cfg["type"], key_suffix=f"{key_suffix}_{cfg['type']}", rules=provided_rules, use_expanders=use_expanders)
         st.divider()
 
@@ -1459,7 +1459,7 @@ def render_mode_selector(gitops_manager: GitOpsRuleManager, config: Dict):
     
     with col2:
         # 显示当前统计
-        local_rules_count = sum(len(cached_load_rules(rt, signature=_rules_signature(rt))) for rt in ["node", "prometheus", "opa"])
+        local_rules_count = sum(len(cached_load_rules(rt, include_disabled=True, signature=_rules_signature(rt))) for rt in ["node", "prometheus", "opa"])
         st.metric("本地规则", local_rules_count)
     
     with col3:
