@@ -552,25 +552,25 @@ def render_rule_editor(rule: Rule, key_suffix: str = "") -> dict:
                 (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
             """
             st.code(yaml_query_content, language="promql", line_numbers=False)
-        # 时间范围
-        time_range_raw = st.text_area(
-            "时间范围 (time_range) (YAML，非必填)", 
-            value=yaml.dump(rule.config.get('time_range', {}), allow_unicode=True).rstrip('\n'), 
-            key=f"{base_key}_time_range",
-            height=100
-        )
-        try:
-            cfg['time_range'] = yaml.safe_load(time_range_raw) if time_range_raw.strip() else {}
-        except Exception as e:
-            st.warning(f"时间范围解析失败，将使用空配置: {e}")
-            cfg['time_range'] = {}
-        with st.expander("配置示例（点击展开）", expanded=False):
-            yaml_time_range_content = """
-                end: now
-                start: now-10m
-                step: 1m
-            """
-            st.code(yaml_time_range_content, language="yaml", line_numbers=False)
+        # # 时间范围
+        # time_range_raw = st.text_area(
+        #     "时间范围 (time_range) (YAML，非必填)", 
+        #     value=yaml.dump(rule.config.get('time_range', {}), allow_unicode=True).rstrip('\n'), 
+        #     key=f"{base_key}_time_range",
+        #     height=100
+        # )
+        # try:
+        #     cfg['time_range'] = yaml.safe_load(time_range_raw) if time_range_raw.strip() else {}
+        # except Exception as e:
+        #     st.warning(f"时间范围解析失败，将使用空配置: {e}")
+        #     cfg['time_range'] = {}
+        # with st.expander("配置示例（点击展开）", expanded=False):
+        #     yaml_time_range_content = """
+        #         end: now
+        #         start: now-10m
+        #         step: 1m
+        #     """
+        #     st.code(yaml_time_range_content, language="yaml", line_numbers=False)
         # 断言配置
         assertions_raw = st.text_area(
             "断言配置 (YAML)", 
