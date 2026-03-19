@@ -218,8 +218,8 @@ def test_node_connection_with_retry(node_info: Dict, retry_times: int = 2, retry
             return True, hostname, message
         retry_count += 1
         if retry_count == retry_times:
-            return success, f"重试{retry_times}次均失败: {message}"
+            return success, hostname, f"重试{retry_times}次均失败: {message}"
 
         import time
         time.sleep(retry_interval)
-    return False, None, "未知错误"
+    return False, hostname, "未知错误"
