@@ -225,8 +225,7 @@ def display_statistics_overview(filtered_results):
 def display_reports_table(filtered_results):
     """显示报告列表 - 使用点击跳转方式"""
     st.markdown("### 📋 报告列表")
-    st.markdown("💡 *点击报告ID查看详情和进行操作*")
-    
+    st.markdown("👇👇 *点击下方最左侧单元格查看报告详情和导出、删除操作*")
     if not filtered_results:
         st.info("📭 暂无符合条件的报告")
         return
@@ -267,7 +266,7 @@ def display_reports_table(filtered_results):
         on_select="rerun",
         selection_mode="single-row",
         column_config={
-            "📄 报告ID": st.column_config.TextColumn("📄 报告ID", help="点击行查看详情和操作"),
+            "📄 报告ID": st.column_config.TextColumn("📄 报告ID", help="点击左侧空白列查看详情和操作"),
             "🏢 集群": st.column_config.TextColumn("🏢 集群"),
             "⏰ 巡检时间": st.column_config.TextColumn("⏰ 巡检时间"),
             "🔄 类型": st.column_config.TextColumn("🔄 类型"),
