@@ -300,7 +300,8 @@ def display_prom_metrics(prom_df: pd.DataFrame, selected_cluster: str):
 
         rule_id = group_df['rule_id'].iloc[0]
         multiselect_key = f"prom_filter_{rule_id}"
-        st.session_state[multiselect_key] = metric_options[:5]
+        if multiselect_key not in st.session_state:
+            st.session_state[multiselect_key] = metric_options[:5]
         # 全选按钮+多选框
         multiselect_, select_btn = st.columns([0.95, 0.05])
         with select_btn:
