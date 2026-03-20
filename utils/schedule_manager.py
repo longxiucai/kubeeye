@@ -103,14 +103,21 @@ class ScheduleTask:
         except Exception:
             return False
         return False
-    
+
     def get_next_run(self):
-        """获取下次运行时间"""
-        if self.cron_expr and self.is_valid_cron():
-            base = dt.now()
-            itr = croniter(self.cron_expr, base)
-            return itr.get_next(dt)
+        """获取任务的下次运行时间"""
+        for job in schedule.jobs:
+            if self.task_id in job.tags:
+                return job.next_run
         return None
+        
+    # def get_next_run(self):
+    #     """获取下次运行时间"""
+    #     if self.cron_expr and self.is_valid_cron():
+    #         base = dt.now()
+    #         itr = croniter(self.cron_expr, base)
+    #         return itr.get_next(dt)
+    #     return None
     
     def get_pretty_schedule(self):
         """获取友好的调度描述"""
@@ -326,21 +333,22 @@ def schedule_tasks():
             schedule.every().hour.do(
                 lambda t=task: run_inspection_bg(t)
             ).tag(task.task_id)
-            
+            logger.info(f"已调度hourly任务: {task.name} ({task.task_id})，将在{task.get_next_run().strftime('%Y-%m-%d %H:%M:%S')}执行")
         elif task.task_type == "daily":
             schedule.every().day.at("00:00").do(
                 lambda t=task: run_inspection_bg(t)
             ).tag(task.task_id)
-            
+            logger.info(f"已调度daily任务: {task.name} ({task.task_id})，将在{task.get_next_run().strftime('%Y-%m-%d %H:%M:%S')}执行")
         elif task.task_type == "weekly":
             schedule.every().monday.at("00:00").do(
                 lambda t=task: run_inspection_bg(t)
             ).tag(task.task_id)
-            
+            logger.info(f"已调度weekly任务: {task.name} ({task.task_id})，将在{task.get_next_run().strftime('%Y-%m-%d %H:%M:%S')}执行")
         elif task.task_type == "monthly":
             schedule.every().day.at("00:00").do(
                 lambda t=task: run_inspection_bg(t) if dt.now().day == 1 else None
             ).tag(task.task_id)
+            logger.info(f"已调度monthly任务: {task.name} ({task.task_id})，将在{task.get_next_run().strftime('%Y-%m-%d %H:%M:%S')}执行")
         elif task.task_type == "once" and task.run_datetime:
             # 计算当前时间到指定运行时间的秒数
             run_time = dt.fromisoformat(task.run_datetime)

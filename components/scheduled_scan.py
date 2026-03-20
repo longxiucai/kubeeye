@@ -242,7 +242,16 @@ def render_create_task_tab():
         return
     
     # --- 调度类型选择放到表单外部 ---
-    schedule_types = ["单次定时", "周期定时（Cron表达式）"]
+    with st.expander("调度类型说明", expanded=True):
+        st.markdown("""
+        - `单次定时` - 只执行一次，手动选择日期与时间
+        - `每小时` - 以当前时间为基础，每小时执行一次，一小时后开始第一次执行（程序重启会重新计时，程序启动一小时后开始执行）
+        - `每天` - 每天00:00执行一次，当晚24:00开始第一次执行
+        - `每周` - 每周一00:00执行一次，下一个星期一00:00开始第一次执行
+        - `每月` - 当晚24:00开始第一次执行（程序重启会重新计时，程序启动后当天24:00开始执行），一个月后再次执行，以此类推
+        - `周期定时（Cron表达式）` - 通过Cron表达式灵活配置
+        """)
+    schedule_types = ["单次定时","每小时","每天","每周","每月", "周期定时（Cron表达式）"]
     if "schedule_type" not in st.session_state:
         st.session_state["schedule_type"] = schedule_types[0]
     st.session_state["schedule_type"] = st.selectbox(
@@ -359,6 +368,10 @@ def render_create_task_tab():
                 # 确定任务类型和CRON表达式
                 task_type_map = {
                     "单次定时": "once",
+                    "每小时": "hourly",
+                    "每天": "daily",
+                    "每周": "weekly",
+                    "每月": "monthly",
                     "周期定时（Cron表达式）": "cron"
                 }
                 actual_task_type = task_type_map.get(task_type, "cron")
